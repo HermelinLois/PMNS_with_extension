@@ -1,4 +1,4 @@
-from sage.all import PolynomialRing, ZZ, Integer, GF, random_prime, factor, primitive_root
+from sage.all import PolynomialRing, ZZ, Integer, GF, gcd, random_prime, factor, primitive_root
 from pmns_factory.core.parameters.params_gestion import search_minimal_degree as SMD, search_base_rho_and_gamma, search_memory_overhead, cast_polynomial_to_minimal_representation
 from pmns_factory.core.parameters.roots_gestion import is_gamma_feasible, search_roots
 
@@ -90,6 +90,8 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, name:str ="z") -> dict:
     p = random_prime(2**psize, lbound=2**(psize-1))
     p = Integer(p)
     
+    assert gcd(k, p-1) == k, f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+
     n = search_minimal_degree(p, k, phi_pow)
     alpha = INIT_ALPHA
     beta = INIT_BETA

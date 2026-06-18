@@ -96,7 +96,7 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, name:str="z") -> dict:
     p = Integer(p)
     
     # this condition permit to know if we can construct irreducible polynomial to construct extension field
-    assert gcd(k, p-1) > 1, f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+    assert gcd(k, p-1) == k, f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
 
     n = search_minimal_degree(p, k, phi_pow)
     lamb = INIT_LAMB
