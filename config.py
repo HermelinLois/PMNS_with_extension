@@ -11,15 +11,16 @@ sys.path.append(str(Path(__file__).parent / "pmns_factory"))
 
 from pmns_factory.core.operations.reductions.montgomery_reduction import montgomery_reduction
 from pmns_factory.core.operations.reductions.babai_reduction import babai_rounding_limited_reduction
-import pmns_factory.pmns_E_type0 as type0
-import pmns_factory.pmns_E_type1 as type1
-import pmns_factory.pmns_E_type0_specific as stype0
+import pmns_factory.pmns_E_type0_generic as type0_generic
+import pmns_factory.pmns_E_type0_specific as type0_specific
+import pmns_factory.pmns_E_type0_sparse as type0_sparse
+import pmns_factory.pmns_E_type1_generic as type1_generic
+import pmns_factory.pmns_E_type1_specific as type1_specific
 
-# method available
+# methods available
 METHOD_MONTGOMERY = 0
 METHOD_BABAI = 1
 
-# configuration
 REDUCTION_CONFIG = {
     METHOD_MONTGOMERY: {
         "py_func": montgomery_reduction,
@@ -35,13 +36,35 @@ REDUCTION_CONFIG = {
     }
 }
 
-# type of external reduction polynomial usable
-E_TYPE0 = 0
-E_TYPE1 = 1
-E_TYPE2 = 2
+# type of external reduction and structure usable to construct PMNS
+ETYPE0 = 0
+ETYPE1 = 1
+
+STRUCT_GENERIC = "generic"
+STRUCT_SPECIFIC = "specific"
+STRUCT_SPARSE = "sparse"
 
 PMNS_CONFIG = {
-    E_TYPE0 : type0,
-    E_TYPE1 : type1,
-    E_TYPE2 : stype0,
+    ETYPE0: {
+        STRUCT_GENERIC: type0_generic,
+        STRUCT_SPECIFIC: type0_specific,
+        STRUCT_SPARSE: type0_sparse,
+    },
+    ETYPE1: {
+        STRUCT_GENERIC: type1_generic,
+        STRUCT_SPECIFIC: type1_specific,
+    },
 }
+
+# path structure for c generation
+CURRENT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = CURRENT_DIR
+OUTPUT_DIR_NAME = "pmns_exec"
+OUTPUT_DIR = ROOT_DIR / OUTPUT_DIR_NAME
+TEMPLATES_DIR = CURRENT_DIR / "pmns_generator" / "writers" / "templates"
+
+PARAMS_TEMPLATES_DIR = TEMPLATES_DIR / "params"
+VALUES_TEMPLATES_DIR = TEMPLATES_DIR / "values"
+
+PARAMS_OUTPUT_DIR = OUTPUT_DIR / "params"
+VALUES_OUTPUT_DIR = OUTPUT_DIR / "tests"

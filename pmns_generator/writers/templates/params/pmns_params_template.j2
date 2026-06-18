@@ -4,15 +4,20 @@
 #include <gmp.h>
 #include <stdint.h>
 
-# define DEGREE {{n}}
-# define RHO {{rho}}
-# define N_LIMBS {{n_limbs}}
-# define EXTENSION_DEGREE {{k}}
+# define DEGREE {{ container.get('n') }}
+# define RHO {{ container.get('rho') }}
+# define N_LIMBS {{ container.get('n_limbs') }}
+# define EXTENSION_DEGREE {{ container.get('k') }}
 # define PHI_POW 64
-# define N_TESTS {{n_test}}
+# define P_SIZE {{ container.get('p').nbits() }}
+# define N_TESTS {{ n_test }}
 
-static mp_limb_t GAMMA[EXTENSION_DEGREE][N_LIMBS] __attribute__((unused)) = {{gamma}};
+{% if container.params.get('struct') == container.struct_sparse %}
+# define IS_SPARSE 1
+{% endif %}
 
-static mp_limb_t P[N_LIMBS] __attribute__((unused)) = {{p}};
+static mp_limb_t GAMMA[EXTENSION_DEGREE][N_LIMBS] __attribute__((unused)) = {{ container.get('gamma', True) }};
+
+static mp_limb_t P[N_LIMBS] __attribute__((unused)) = {{ container.get('p', True) }};
 
 #endif

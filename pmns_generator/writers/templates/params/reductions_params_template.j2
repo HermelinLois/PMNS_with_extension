@@ -3,19 +3,30 @@
 
 #include "pmns_params.h"
 
-# define H1 {{h1}}
-# define H2 {{h2}}
+{% if container.params.get('struct') != container.struct_sparse %}
+# define H1 {{ container.params.get('h1') }}
+# define H2 {{ container.params.get('h2') }}
 
-static const int64_t EXT_MAT [DEGREE][DEGREE] = {{ext_red}};
+static const int64_t L_INV_BABAI [DEGREE][DEGREE] = {{ container.get('L_inv_babai', True) }};
+{% else %}
+static const __int128 LAMBDA = {{ container.params.get('lambda') }};
+static const __int128 LAMBDA_INV_MOD = {{ container.params.get('lambda_inv_mod') }}{{ "ULL" if container.params.get('lambda_inv_mod') >= 0 else "LL" }};
+static const __int128 GAMMA_POW_K_MOD = {{ container.params.get('gamma_pow_k_mod') }}{{ "ULL" if container.params.get('gamma_pow_k_mod') >= 0 else "LL" }};
+static const __int128 GAMMA_POW_N_LAMBDA_MOD ={{ container.params.get('gamma_pow_n_lambdda_mod') }}{{ "ULL" if container.params.get('gamma_pow_n_lambdda_mod') >= 0 else "LL" }};
+{% endif %}
 
-static const int64_t MAT_M [DEGREE][DEGREE] = {{M_mat}};
+static const int64_t EXT_MAT [DEGREE][DEGREE] = {{ container.get('ext_red_mat', True) }};
 
-static const int64_t MAT_N [DEGREE][DEGREE] = {{N_mat}};
+static const int64_t L [DEGREE][DEGREE] = {{ container.get('L', True) }};
 
-static const int64_t L [DEGREE][DEGREE] = {{L}};
+static const int64_t L_INV [DEGREE][DEGREE] = {{ container.get('L_inv', True) }};
 
-static const int64_t L_INV [DEGREE][DEGREE] = {{L_inv}};
+static const int64_t MAT_M [DEGREE][DEGREE] = {{ container.get('M_mat', True) }};
 
-static const int64_t L_INV_BABAI [DEGREE][DEGREE] = {{L_inv_babai}};
+static const int64_t MAT_N [DEGREE][DEGREE] = {{ container.get('N_mat', True) }};
+
+static const int64_t TOEPLITZ_MAT_M [2*DEGREE - 1] = {{ container.get('toeplitz_mat_m', True) }};
+
+static const uint64_t TOEPLITZ_MAT_N [2*DEGREE - 1] = {{ container.get('toeplitz_mat_n', True) }};
 
 #endif

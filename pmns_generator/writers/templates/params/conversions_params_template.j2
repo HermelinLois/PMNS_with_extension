@@ -1,18 +1,23 @@
 # include "pmns_params.h"
 
-# define N_INT_RED_CLASSICAL {{n_red_exact}}
-# define N_INT_RED_PSEUDO_FAST {{n_red_pseudo}}
-# define N_INT_RED_FAST {{n_red_fast}}
-# define THETA_POW {{theta_pow}}
-# define N_POL {{n_pol}}
-
-static const mp_limb_t TRANSITION_MATRIX[EXTENSION_DEGREE][EXTENSION_DEGREE][N_LIMBS] = {{T_mat}};
+# define N_INT_RED_CLASSICAL {{ container.get('n_red_exact') }}
+# define N_INT_RED_PSEUDO_FAST {{ container.get('n_red_pseudo') }}
+# define N_INT_RED_FAST {{ container.get('n_red_fast') }}
+# define THETA_POW {{ container.get('theta_pow') }}
+# define N_POL {{ container.get('n_pols') }}
 
 // pre-compute PMNS representation of theta^i * phi^r
-static const int64_t PMNS_THETA_PSEUDO_FAST[1][N_POL][DEGREE] = {{int_pols}};
+static const int64_t PMNS_THETA_PSEUDO_FAST[N_POL][DEGREE] = {{ container.get('int_pols', True) }};
 
 // pre-compute PMNS representation of z^i where z is the root of the polynomial use to construct extension field
-static const int64_t PMNS_FIELD_ROOTS[EXTENSION_DEGREE][DEGREE] = {{z_pols}};
+static const int64_t PMNS_FIELD_ROOTS[EXTENSION_DEGREE][DEGREE] = {{ container.get('z_pols', True) }};
 
 // pre-compute PMNS representation of theta^i * phi^r * z**j
-static const int64_t PMNS_THETA_FAST[EXTENSION_DEGREE][N_POL][DEGREE] = {{fast_pols}};
+static const int64_t PMNS_THETA_FAST[EXTENSION_DEGREE][N_POL][DEGREE] = {{ container.get('fast_pols', True) }};
+
+// pre-compute gamma_base[i] = gamma**i where gamma is the base of the PMNS representation
+static const mp_limb_t GAMMA_POW[DEGREE][EXTENSION_DEGREE][N_LIMBS] = {{ container.get('gamma_pows', True) }};
+
+{% if container.get('struct') != container.struct_sparse %}
+static const mp_limb_t TRANSITION_MATRIX[EXTENSION_DEGREE][EXTENSION_DEGREE][N_LIMBS] = {{ container.get('T_mat', True) }};
+{% endif %}

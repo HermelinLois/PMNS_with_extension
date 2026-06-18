@@ -5,7 +5,7 @@
 # reduction
 # ==================================================
 
-from sage.all import vector, matrix, PolynomialRing, ZZ, log, RR, ceil, Integer
+from sage.all import matrix, PolynomialRing, ZZ, log, RR, ceil
 from pmns_factory.core.operations.reductions.montgomery_reduction import fast_montgomery_reduction
 
 PR = PolynomialRing(ZZ, "X")
@@ -57,8 +57,7 @@ def montgomery_pseudo_fast_conversion(element, container):
     mask = (1<<theta_pow) - 1 
     rho, gamma = container.get('rho'), container.get('gamma')
 
-    n_pols = container.get('n_pol')
-    ipols = container.get('int_pols')[0]
+    ipols = container.get('int_pols')
     zpols = container.get('z_pols')
     
     polynomial = PR(0)
@@ -74,7 +73,7 @@ def montgomery_pseudo_fast_conversion(element, container):
 
         polynomial += current_pol * PR(zpols[deg]) % E
 
-    for i in range(container.get('n_red_pseudo')):
+    for _ in range(container.get('n_red_pseudo')):
         polynomial = fast_montgomery_reduction(polynomial, L, L_inv, phi)
     
     assert polynomial(gamma) == element, f"polynomial doesn't represent {element=}\n{polynomial(gamma)}"
@@ -102,7 +101,9 @@ def montgomery_fast_conversion(element, container):
             polynomial += part * PR(pol_coeffs)
             
             current_element >>= theta_pow
-    polynomial = fast_montgomery_reduction(polynomial, L, L_inv, phi)
+    
+    for i in range(container.get('n_red_fast')):
+        polynomial = fast_montgomery_reduction(polynomial, L, L_inv, phi)
     
     assert polynomial(gamma) == element, f"polynomial doesn't represent {element=}\n{polynomial(gamma)}"
     assert all(abs(c) < rho for c in polynomial), f"{rho=} too low for {element=}\n{polynomial =}"
@@ -143,14 +144,31 @@ def montgomery_exact_conversion(element, container, add_red=0):
 
     return V
 
-def compute_nb_internal_reductions(num, phi, rho, sublattice):
+def compute_nb_internal_reductions(bound:int, phi:int, rho:int, sublattice) -> int:
+    """
+    Compute the minimum number of internal Montgomery reductions needed to bring a
+    polynomial with coefficient bound `bound` below the PMNS coefficient bound `rho`.
+
+    The estimate uses:
+        ceil(log_phi(bound / (rho - 1/2 * ||sublattice||_1 * phi/(phi - 1))))
+
+    Args:
+        bound (int): Maximum absolute coefficient value before reduction.
+        phi (int): Word size base, usually `2**phi_pow`.
+        rho (int): Target PMNS coefficient bound.
+        sublattice (matrix): Lattice of null polynomials over gamma.
+
+    Returns:
+        int: Estimated number of internal reductions.
+    """
+    
     augment = phi / (phi - 1)
     norm1 = sublattice.norm(1)
     denom = rho - (norm1 / 2) * augment
     
     rr_phi = RR(phi)
     rr_denom = RR(denom)
-    rr_num = RR(num)
+    rr_num = RR(bound)
 
     log_phi = log(rr_phi)
     log_x = log(rr_num)
@@ -160,12 +178,25 @@ def compute_nb_internal_reductions(num, phi, rho, sublattice):
     
     
     
-def compute_conversion_tables(container, psi, nb_red, npols, over_field=True):
-    n, k = container.get('n'), container.get('k')
-    phi_red = (2**container.get('phi_pow'))**nb_red
-    mask = 1 << psi
-    z = container.get('gamma').parent().gen()
+def compute_conversion_tables(container, theta_pow:int, nb_red:int, npols:int, over_field:bool=True) -> list:
+    """
+    Compute polynomials representing (2^theta_pow)^i * phi^nb_red * z^j.
+
+    Args:
+        container (PMNSContainer): PMNS conversion data container.
+        theta_pow (int): Power of 2 to determine the bit mask for element extraction in pseudo-fast and fast conversions.
+        nb_red (int): Number of internal Montgomery reductions to apply. This ensures coefficients are brought below 1/2||G||_1 per F. Palma's thesis.
+        npols (int): Number of polynomials to generate for each degree.
+        over_field (bool): If True, generate polynomials over the extension field (include powers of gamma); if False, only over the base field.
+
+    Returns:
+        list: Polynomials representing theta^i * phi^nb_red * z^j for each degree and polynomial index.
+    """
     
+    k = container.get('k')
+    phi_red = (2**container.get('phi_pow'))**nb_red
+    theta = 1 << theta_pow
+    z = container.get('gamma').parent().gen()
     num_deg = k if over_field else 1
 
-    return [[montgomery_exact_conversion((mask**i) * phi_red * (z**deg), container, add_red=1).list() for i in range(npols)] for deg in range(num_deg)]
+    return [[montgomery_exact_conversion((theta**i) * phi_red * (z**deg), container, add_red=1).list() for i in range(npols)] for deg in range(num_deg)]

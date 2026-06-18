@@ -9,15 +9,15 @@ if str(ROOT_DIR) not in sys.path:
 
 from pmns_factory.core.operations.convertions_gestion import montgomery_exact_conversion, montgomery_pseudo_fast_conversion, montgomery_fast_conversion
 from pmns_generator.writers.format.container import PMNSContainer
-import pmns_factory.pmns_E_type0_specific as stype0
+import pmns_factory.pmns_E_type0_generic as type0
 
 PR = PolynomialRing(ZZ,"X")
 X = PR.gen()
 
-m = None
-p = Integer(101744864283287535450564907935948129100692627616929520537342055149603313146187) #random_prime(2**m, lbound=2**(m-1))
-k = 13
-pmns = stype0.gen_parameters(p, k)
+m = 128
+p = random_prime(2**m, lbound=2**(m-1))
+k = 2
+pmns = type0.gen_parameters(p, k)
 
 
 container = PMNSContainer(None, pmns)

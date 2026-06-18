@@ -1,7 +1,7 @@
 import pickle
 from pathlib import Path
 import sys
-from sage.all import ceil, block_matrix, matrix
+from sage.all import ceil, block_matrix, matrix, Integer
 
 # Gestion des imports relatifs/système
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -17,63 +17,124 @@ from ..format import format_element as format
 from pmns_factory.core.operations.convertions_gestion import compute_conversion_tables, compute_nb_internal_reductions, gen_transition_matrix
 from pmns_factory.core.operations.reductions.babai_reduction import gen_params_for_babai
 from pmns_factory.core.operations.reductions.montgomery_reduction import gen_mn_reduction_matrix, search_polynomial_m
-from pmns_factory.core.parameters.matrix_gestion import gen_overflow_matrix
+from pmns_factory.core.parameters.matrix_gestion import gen_overflow_matrix, gen_toeplitz_representation
 from pmns_factory.core.parameters.params_gestion import search_memory_overhead
+from config import STRUCT_SPARSE, STRUCT_GENERIC, STRUCT_SPECIFIC
 
-class PMNSContainer:
-
-    def __init__(self, Etype:int, pmns: dict):
-        self.params = {**pmns}
-        self.params['type'] = Etype
-        self._build()
-
-
-    def _ensure_list(self, obj):
+def _ensure_list(obj):
         if hasattr(obj, 'rows'):
             return [list(row) for row in obj.rows()]
         return obj
 
+def _pad_coefficients(poly, n):
+        if hasattr(poly, 'list'):
+            poly = list(poly)
+
+        if isinstance(poly, list) and len(poly) > 0 and isinstance(poly[0], list):
+            return [_pad_coefficients(item, n) for item in poly]
+        
+        if isinstance(poly, list):
+            return poly + [0] * (n - len(poly))
+
+        return poly
+
+
+class PMNSContainer:
+    struct_generic = STRUCT_GENERIC
+    struct_specific = STRUCT_SPECIFIC
+    struct_sparse = STRUCT_SPARSE
+    
+    def __init__(self, Etype:int, pmns: dict, structure:str=struct_generic):
+        self.params = {**pmns}
+        self.params['type'] = Etype
+        self.params['struct'] = structure
+
+        self.params['n'] = pmns['E'].degree()
+        self.params['n_limbs'] = ceil(pmns['p'].nbits() / pmns['phi_pow'])
+        
+        self._build()
+
 
     def _build(self):
+        self.update_matrix_parameters()
+        self.update_reduction_parameters()
+        self.update_conversions_parameters()
+        
+
+    def update_matrix_parameters(self):
         E, L = self.params['E'], self.params['L']
         p, k = self.params['p'], self.params['k']
         phi_pow = self.params['phi_pow']
-        phi = 2**phi_pow
         gamma = self.params['gamma']
-        rho = self.params['rho']
-        n = E.degree()
+        n = self.params['n']
+        phi = 2**phi_pow
         
-        self.params['n'] = n
-        self.params['n_limbs'] = ceil(p.nbits() / phi_pow)
-        
-        self.params['L'] = self._ensure_list(L)
+        self.params['L'] = _ensure_list(L)
         self.params['L_origin'] = L
+
         L_inv = -L.inverse() % phi
-        self.params['L_inv'] = self._ensure_list(L_inv)
+        self.params['L_inv'] = _ensure_list(L_inv)
         self.params['L_inv_origin'] = L_inv
 
-        ext_mat_sage = block_matrix([[gen_overflow_matrix(E)], [matrix(1, n)]])
-        self.params['ext_red_mat'] = self._ensure_list(ext_mat_sage)
+        external_mat_red = block_matrix([[gen_overflow_matrix(E)], [matrix(1, n)]])
+        self.params['ext_red_mat'] = _ensure_list(external_mat_red)
         
-        M = search_polynomial_m(L, k, p, gamma, E)
+        M = search_polynomial_m(L, k, p, gamma, E, sparse=self.params['struct']==STRUCT_SPARSE)
         M_mat, N_mat = gen_mn_reduction_matrix(M, E, phi)
-        self.params['M_mat'] = self._ensure_list(M_mat)
-        self.params['N_mat'] = self._ensure_list(N_mat)
-        
-        h1, h2, L_inv_babai = gen_params_for_babai(L, phi_pow, rho, E)
-        self.params['h1'] = h1
-        self.params['h2'] = h2
-        self.params['L_inv_babai'] = self._ensure_list(L_inv_babai)
-        self.params['L_inv_babai_origin'] = L_inv_babai
-        
+        self.params['M_mat'] = _ensure_list(M_mat)
+        self.params['M_mat_origin'] = M_mat
+        self.params['N_mat'] = _ensure_list(N_mat)
+        self.params['N_mat_origin'] = N_mat
+        self.params['toeplitz_mat_m'] = _ensure_list(gen_toeplitz_representation(M_mat))
+        self.params['toeplitz_mat_n'] = _ensure_list(gen_toeplitz_representation(N_mat))
+
         T_mat = gen_transition_matrix(gamma, k)
-        self.params['T_mat'] = self._ensure_list(T_mat)
+        self.params['T_mat'] = _ensure_list(T_mat)
         self.params['T_mat_origin'] = T_mat
+
+
+
+    def update_reduction_parameters(self):
+        struct = self.params['struct']
+        E = self.params['E']
+        phi_pow = self.params['phi_pow']
         
+        if struct == self.struct_sparse:
+            # compute parameters for sparse reduction with External reduction of form X^n - lambda with lambda = -E[0]
+            # and with gamma such that gamma^k is an integer
+            k = self.params['k']
+            phi = 2**phi_pow
+            gamma = self.params['gamma']
+
+            lamb = - E[0]
+            lamb_inv_mod = pow(lamb, -1, phi)
+            lambda_inv_mod = lamb_inv_mod if lamb_inv_mod <= phi//2 else lamb_inv_mod - phi
+
+            gam_pow = int(pow(gamma,k)) % phi
+            gamma_pow_k_mod = gam_pow if gam_pow <= phi//2 else gam_pow - phi
+
+            self.params['lambda'] = lamb
+            self.params['lambda_inv_mod'] = lambda_inv_mod
+            self.params['gamma_pow_k_mod'] = gamma_pow_k_mod
+
+            prod = (gamma_pow_k_mod * lambda_inv_mod) % phi
+            self.params['gamma_pow_n_lambdda_mod'] = prod if prod <= phi//2 else prod - phi
         
-    def add_conversions_parameters(self):
+        else :
+            # compute parameters for Babai reduction
+            L = self.params['L_origin']
+            rho = self.params['rho']
+
+            h1, h2, L_inv_babai = gen_params_for_babai(L, phi_pow, rho, E)
+            self.params['h1'] = h1
+            self.params['h2'] = h2
+            self.params['L_inv_babai'] = _ensure_list(L_inv_babai)
+            self.params['L_inv_babai_origin'] = L_inv_babai
+
+
+    def update_conversions_parameters(self):
         tpow = "theta_pow"
-        nb_pols = 'n_pol'
+        nb_pols = 'n_pols'
         nb_exact = 'n_red_exact'
         nb_pseudo = 'n_red_pseudo'
         nb_fast = 'n_red_fast'
@@ -85,6 +146,7 @@ class PMNSContainer:
         if all(key in self.params for key in required_keys):
             return
 
+        struct = self.params['struct']
         n, L = self.params['n'], self.params['L_origin']
         p, k = self.params['p'], self.params['k']
         phi_pow = self.params['phi_pow']
@@ -95,14 +157,20 @@ class PMNSContainer:
         
         n_red_extact = compute_nb_internal_reductions((2*rho)**(n/k), phi, rho, L)
 
-        # without external reduction polynomial product is bounded by k*ceil(n/k) * theta * (1/2 * L.norm(1))**2)
+        # without external reduction polynomial product is bounded by k * theta * (1/2 * L.norm(1))**2) or k * theta * 1/2 * L.norm(1) if 
+        # used structure is sparse with our implementation
         # this is due to the fact that precomputed polynomial have coefficients bounded by (1/2 * L.norm(1))**2) following F. PALMA thesis
-        # by construction, we add at most a coefficient of size theta - 1 were theta = 2**theta_pow
+        # by construction, we add at most a coefficient of size theta = 2**theta_pow
         # k factor is comming from the polynomials addition (cf. montgomery_pseudo_fast_conversion)
         # as we realise an external reduction to ensure a representation bounded by rho, w parameters appears in the bound
 
         w = search_memory_overhead(self.params['E'])
-        n_red_pseudo = compute_nb_internal_reductions(w * k * ceil(n/k) * 2**theta_pow * (1/2 * L.norm(1))**2 , phi, rho, L)
+        
+        factor = (1/2 * L.norm(1))**(1 if struct == self.struct_sparse else 2)
+        n_red_pseudo = compute_nb_internal_reductions(w * k * 2**theta_pow * factor , phi, rho, L)
+        n_red_fast = compute_nb_internal_reductions(k * 2**theta_pow * 1/2 * L.norm(1), phi, rho, L)
+
+        assert n_red_fast == 1, "Current implementation of fast conversion only support 1 internal reduction, if more are needed, the conversion should be adapted to support them."
         
         n_pols = ceil(n/k)
         self.params[tpow] = theta_pow     
@@ -110,40 +178,41 @@ class PMNSContainer:
         
         self.params[nb_exact] = n_red_extact
         self.params[nb_pseudo] = n_red_pseudo
-        self.params[nb_fast] = 1
+        self.params[nb_fast] = n_red_fast
         
-        self.params[fpols] = compute_conversion_tables(self, theta_pow, 1, n_pols, over_field=True)
+        self.params[fpols] = _pad_coefficients(compute_conversion_tables(self, theta_pow, 1, n_pols, over_field=True), n)
+        i_pols_full = _pad_coefficients(compute_conversion_tables(self, theta_pow, n_red_pseudo, n_pols, over_field=False), n)
+        self.params[ipols] = i_pols_full[0]
+        z_pols_full = _pad_coefficients(compute_conversion_tables(self, 0, 0, k, over_field=True), n)
+        self.params[zpols] = [z_pols_full[i][0] for i in range(len(z_pols_full))]
 
-        self.params[ipols] = compute_conversion_tables(self, theta_pow, n_red_pseudo, n_pols, over_field=False)
-        z_pols = compute_conversion_tables(self, 0, 0, k, over_field=True)
-        self.params[zpols] = [row[0] if row[0] != [1] else [1] + [0] * (self.params['n'] - 1) for row in z_pols]
+        gamma = self.params['gamma']       
+        gamma_pows = []
+        for i in range(n):
+            vec = list((gamma**i)._vector_())
+            gamma_pows.append([int(c) for c in vec])
+        self.params['gamma_pows'] = gamma_pows
 
 
     def save(self):
         path = OUTPUT_DIR_SAVES
         path.mkdir(parents=True, exist_ok=True)
         
-        filename = f"pmns_p{self.params['p'].nbits()}_k{self.params['k']}_E{self.params['type']}.pkl"
+        filename = f"pmns_p{self.params['p'].nbits()}_k{self.params['k']}_E{self.params['type']}_{self.params['struct']}.pkl"
         full_path = path / filename
         with open(full_path, 'wb') as f:
             pickle.dump(self, f)
             
             
     @classmethod
-    def load(cls, pbits:int, k:int, Etype:int):
-        path = OUTPUT_DIR_SAVES / f"pmns_p{pbits}_k{k}_E{Etype}.pkl"
+    def load(cls, pbits:int, k:int, Etype:int, structure:str="generic"):
+        path = OUTPUT_DIR_SAVES / f"pmns_p{pbits}_k{k}_E{Etype}_{structure}.pkl"
         
         if not path.exists():
             raise FileNotFoundError(f"Path to file {path} doesn't seems to exist.")
 
         with open(path, 'rb') as f:
             return pickle.load(f)
-
-
-    def add(self, name: str, element):
-        if name in self.params:
-            raise KeyError(f"Parameter '{name}' elready exist.")
-        self.params[name] = self._ensure_list(element)
         
         
     def get(self, name: str, to_format: bool = False):
@@ -161,7 +230,7 @@ class PMNSContainer:
         is_nested = is_list and len(val) > 0 and isinstance(val[0], (list, tuple))
         is_tensor = is_nested and len(val[0]) > 0 and isinstance(val[0][0], (list, tuple))
         
-        mpn_names = ['p', 'gamma', 'T_mat']
+        mpn_names = ['p', 'gamma', 'T_mat', 'gamma_pows']
         if name in mpn_names:
             if is_nested: 
                 return format.format_matrix_to_mpn(val, n_limbs)

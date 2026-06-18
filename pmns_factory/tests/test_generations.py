@@ -9,9 +9,10 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-import pmns_factory.pmns_E_type0 as type0
-import pmns_factory.pmns_E_type1 as type1
-import pmns_factory.pmns_E_type0_specific as stype0
+import pmns_factory.pmns_E_type0_generic as type0
+import pmns_factory.pmns_E_type1_generic as type1
+import pmns_factory.pmns_E_type0_specific as specific_type0
+import pmns_factory.pmns_E_type0_sparse as sparse_type0
 
 
 GOOD = 'GOOD'
@@ -33,8 +34,9 @@ CATEGORIES = [STATUS, NORM, ERROR_TIME, ERROR_CODE, ROUND, ERROR_UNKNOW]
 
 TYPE0 = type0.__name__.split('.')[-1]
 TYPE1 = type1.__name__.split('.')[-1]
-STYPE0 = stype0.__name__.split('.')[-1]
-TYPES = [type0, type1, stype0]
+SPECIFIC_TYPE0 = specific_type0.__name__.split('.')[-1]
+SPARSE_TYPE0 = sparse_type0.__name__.split('.')[-1]
+TYPES = [type0, type1, specific_type0, sparse_type0]
 
 
 def write_summarize_data(writer, k:int, results:list, timeout:int, ntest:int, range_test:list):
@@ -54,9 +56,10 @@ def write_summarize_data(writer, k:int, results:list, timeout:int, ntest:int, ra
     
     n = len(CATEGORIES)
     datas_register = {
-        TYPE0:[[0]*n for _ in range(len(range_test))],
-        TYPE1:[[0]*n for _ in range(len(range_test))],
-        STYPE0:[[0]*n for _ in range(len(range_test))]
+        TYPE0: [[0]*n for _ in range(len(range_test))],
+        TYPE1: [[0]*n for _ in range(len(range_test))],
+        SPECIFIC_TYPE0: [[0]*n for _ in range(len(range_test))],
+        SPARSE_TYPE0: [[0]*n for _ in range(len(range_test))]
     }
 
     # write specific data in registers

@@ -6,6 +6,7 @@
 
 from sage.all import matrix, ZZ, PolynomialRing, Integer, vector, GF, gcd, xgcd
 from ...math_utils import square_and_multiply
+from ...parameters.matrix_gestion import gen_null_base
 
 PR = PolynomialRing(ZZ, "X")
 PR2 = PolynomialRing(GF(2), "X")
@@ -29,7 +30,7 @@ def search_m_with_even_degs(base, pol_e):
     return None
 
 
-def search_m_with_odd_deg(k: int, p: int, gamma, pol_e):
+def search_m_with_odd_deg(k: int, p: int, gamma, pol_e, sparse:bool =False):
     """
     General search for an invertible polynomial modulo pol_e.
 
@@ -38,27 +39,19 @@ def search_m_with_odd_deg(k: int, p: int, gamma, pol_e):
         p (int): prime used to construct the extension field
         gamma: root of the external reduction polynomial
         pol_e (Polynomial): external reduction polynomial
+        sparse (bool, OPtional): is construct PMNS is sparse
 
     Returns:
         Polynomial: polynomial invertible modulo pol_e
     """
     n = pol_e.degree()
-    base = matrix(ZZ, n, n, 0)
+    base = gen_null_base(k, p, pol_e, gamma, sparse=sparse)
 
-    pol = gamma.minpoly()
-    R = pol.parent()
-    X = R.gen()
-
-    for i in range(k):
-        base[i, i] = p
-
-    for i in range(k, n):
-        vect = (pol * X ** (i - k)).list()
-        complete_vect = vect + [0] * (n - len(vect))
+    for i in range(n):
         base[i] = list(
             map(
                 lambda enum: int(enum[1]) + p * (int(enum[1]) & 1) * (enum[0] != i),
-                enumerate(complete_vect),
+                enumerate(base[i]),
             )
         )
 
@@ -76,7 +69,7 @@ def search_m_with_odd_deg(k: int, p: int, gamma, pol_e):
     return None
 
 
-def search_polynomial_m(base, k: int, p: int, gamma, pol_e):
+def search_polynomial_m(base, k: int, p: int, gamma, pol_e, sparse:bool =False):
     """
     Search for an invertible element modulo pol_e with optimization
     when the coefficients of pol_e are all even in GF(2).
@@ -87,17 +80,18 @@ def search_polynomial_m(base, k: int, p: int, gamma, pol_e):
         p (int): prime used to construct the extension field
         gamma: root of the external reduction polynomial
         pol_e (Polynomial): external reduction polynomial
+        sparse (bool, OPtional): is construct PMNS is sparse
 
     Returns:
         Polynomial: polynomial invertible modulo pol_e
     """
     no_optimisation = any(coef & 1 for coef in pol_e)
     if no_optimisation:
-        return search_m_with_odd_deg(k, p, gamma, pol_e)
+        return search_m_with_odd_deg(k, p, gamma, pol_e, sparse=sparse)
     return search_m_with_even_degs(base, pol_e)
 
 
-def search_m_and_n(k: int, p: int, gamma, base, pol_e, phi: int = 2 ** 64):
+def search_m_and_n(k: int, p: int, gamma, base, pol_e, sparse:bool=False, phi: int = 2 ** 64):
     """
     Retrieve M invertible modulo pol_e and N = -M^(-1) mod phi.
 
@@ -108,12 +102,13 @@ def search_m_and_n(k: int, p: int, gamma, base, pol_e, phi: int = 2 ** 64):
         base (matrix): reduced base of null polynomial over gamma
         pol_e (Polynomial): polynomial used for external reduction in PMNS
         phi (int, Optional): word size bound. Equal to 2**64 by default
+        sparse (bool, OPtional): is construct PMNS is sparse
 
     Returns:
         Polynomial: M, a polynomial null over gamma and invertible modulo pol_e
         Polynomial: N, a polynomial such that N = -M^(-1) mod phi
     """
-    M = search_polynomial_m(base, k, p, gamma, pol_e)
+    M = search_polynomial_m(base, k, p, gamma, pol_e, sparse=sparse)
 
     assert M(gamma) == 0, "problem occuring with the base. Polynomial M isn't inverssible"
 
@@ -171,7 +166,7 @@ def montgomery_reduction(pol_p, M, N, E, gamma, phi:int =2**64):
     phi = Integer(phi)
 
     Q = ((pol_p * N) % E) % phi
-    Q = PR([elmt - phi * (elmt>2**(phi.nbits() - 2)) for elmt in Q])
+    Q = PR([elmt - phi * (elmt > phi//2) for elmt in Q])
 
     T = (Q * M) % E 
     reduction = (pol_p + T) // phi
@@ -182,6 +177,16 @@ def montgomery_reduction(pol_p, M, N, E, gamma, phi:int =2**64):
 
 
 def fast_montgomery_reduction(pol_p, mat_sublattice, mat_sublattice_inv, phi:int = 2**64):
+    """
+    Fast reduction of a polynomial with Montgomery reduction using precomputed matrices of the sublattice.
+    Args:
+        pol_p (Polynomial): element to be reduced
+        mat_sublattice (matrix): matrix representing the sublattice for reduction
+        mat_sublattice_inv (matrix): minus the inverse of the sublattice matrix modulo phi
+        phi (int, opt): represent bit word size use by the architecture. usualy a power of 2 and is 2^64 by default
+    Returns:
+        Polynomial: reduction of pol_p which still represent the same element
+    """
     n = mat_sublattice.nrows()
     phi = Integer(phi)
 
@@ -189,5 +194,5 @@ def fast_montgomery_reduction(pol_p, mat_sublattice, mat_sublattice_inv, phi:int
     q_raw = (v_p * mat_sublattice_inv) % phi
     q_centered = vector(ZZ, [c - phi *(c > phi // 2) for c in q_raw])
     T = PR((q_centered * mat_sublattice).list())
-    
+
     return (pol_p + T)//phi

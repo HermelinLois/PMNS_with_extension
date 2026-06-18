@@ -60,3 +60,8 @@ def square_and_multiply(base, exponent, mod=None):
     if mod is None:
         return square_and_multiply_no_mod(base, exponent)
     return square_and_multiply_mod(base, exponent, mod)
+
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)

@@ -23,9 +23,12 @@ def is_gamma_feasible(p:int, k:int) -> bool:
     # Ensure p is Sage Integer to handle large primes
     p = Integer(p)
     
-    # We know that gcd(k, (p^k - 1)/p-1) > 1 to possibly ensure that 
-    # there exist gamma wich are suitable for PMNS construction
-    # Note that (p^k - 1)/(p - 1) is an int because p^k - 1 = (p-1)q with q in N for k in N
+    # We verify that gcd(k, (p^k - 1)/p-1) > 1 to ensure the possibility
+    # of finding a suitable gamma for PMNS construction. This condition arises 
+    # from the fact that we need to find an element gamma in the extension field 
+    # such that its powers generate a basis of the field, and that gamma^k is an
+    # integer. the following condition is a necessary condition for the existence of such an element.
+    # however, it is not a sufficient condition, and further checks are needed to confirm the existence of a suitable gamma.
     value = (square_and_multiply(p, k) - 1) // (p-1)    
     return gcd(k, value) > 1
 
@@ -68,7 +71,7 @@ def is_root_free(root, k: int, p: int) -> bool:
     return matrix(GF(p), family).det() != 0
 
 
-def is_root_pow_in_base_field(root, k:int, p:int) -> bool:
+def is_root_powk_in_base_field(root, k:int, p:int) -> bool:
     """
     Check if root^k is an integer
     Args:
@@ -87,9 +90,7 @@ def select_roots(roots:list, p:int, k:int):
     """
     Select suitable roots for PMNS construction.
     
-    selected roots verify:
-        > root^k is an interger
-        > consecutive powers of root from a base of the extension field
+    selected roots verify: consecutive powers of root from a base of the extension field
 
     Args:
         roots (list of extension field element): root of pol_e
@@ -101,26 +102,28 @@ def select_roots(roots:list, p:int, k:int):
     """
     
     selected_roots = []
-    for root, _ in roots:
+    for root in roots:
 
         if not is_root_free(root, k, p):
             continue
-        
+    
         selected_roots.append(root)
-
     return selected_roots
+
 
 
 def search_roots(p:int, k:int, pol_e, K) -> list:
     """
     Retrieve roots of polynomial pol_e in GF(p^k) suitable for PMNS construction.
-
+    Here, we search roots such that their powers generate a base of the extension field,     and if requested, we can search roots such that root^k is an integer, which allows us
+    to generate sparse matrices for reduction in PMNS and thus optimize reduction in PMNS.
+    
     Args:
         p (int): prime use to create extension field
         k (int): degree of the extension
         pol_e (polynomial): polynomial use for external reduction in PMNS
         K (field) : named extension field used with PMNS construction
-
+        
     Returns:
         list (extension field element): roots of pol_e in GF(p^k) suitable for PMNS representation
     """
@@ -137,4 +140,4 @@ def search_roots(p:int, k:int, pol_e, K) -> list:
     minimal_polynomial = gcd(pol_e, null_polynomial)
     
     # Select roots satisfying PMNS conditions
-    return select_roots(minimal_polynomial.roots(), p, k)
+    return select_roots(minimal_polynomial.roots(multiplicities=False), p, k)

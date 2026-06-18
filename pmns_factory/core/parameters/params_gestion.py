@@ -4,10 +4,9 @@
 # PMNS construction
 # ==================================================
 
-from sage.all import vector, infinity, ZZ, PolynomialRing, ceil, exp, Integer
-from pmns_factory.core.parameters.matrix_gestion import gen_overflow_matrix, gen_reduce_null_base
-from pmns_factory.core.operations.reductions.montgomery_reduction import search_m_with_even_degs, search_m_with_odd_deg, search_polynomial_m, search_m_and_n
-
+from sage.all import factorial, log, vector, infinity, ZZ, PolynomialRing, ceil, exp, Integer, GF
+from pmns_factory.core.parameters.matrix_gestion import gen_overflow_matrix, gen_null_base
+from pmns_factory.core.math_utils import factorial
 PR = PolynomialRing(ZZ, "X")
 
 def search_memory_overhead(pol_e) -> int:
@@ -38,7 +37,7 @@ def search_memory_overhead(pol_e) -> int:
     n = pol_e.degree()
 
     # Overflow matrix
-    epsilon = gen_overflow_matrix(pol_e)
+    epsilon = gen_overflow_matrix(pol_e).apply_map(lambda x: abs(x))
 
     # Construct vectors
     v1 = vector(range(1, n + 1))
@@ -49,17 +48,20 @@ def search_memory_overhead(pol_e) -> int:
 
 
 
-def search_base_rho_and_gamma(roots: list, k: int, p: int, phi: int, pol_e):
+def search_base_rho_and_gamma(roots: list, k: int, p: int, phi: int, pol_e, sparse:bool=False):
     """
     Search a suitable PMNS base, rho bound, and gamma root.
-
+    If sparse is true, we search gamma such that gamma^k is an integer, which allows us to generate a
+    reduced base of null polynomial with a specific structure and thus create sparse matrices for reduction in PMNS.
+    Apply LLL() to the generated null lattice to construct a with small coefficients lattice.
+    
     Args:
         roots (list): roots of pol_e in the extension field
         k (int): extension degree
         p (int): prime used to construct the extension field
         phi (int): word size bound
         pol_e (Polynomial): polynomial used for external reduction in PMNS
-
+        sparse (bool, optional): select roots that yield sparse reduction matrices. Defaults to False.
     Returns:
         tuple:
             base (matrix): LLL-reduced base of null polynomials at gamma
@@ -68,14 +70,13 @@ def search_base_rho_and_gamma(roots: list, k: int, p: int, phi: int, pol_e):
 
         None if no suitable root is found.
     """
-
-    n = pol_e.degree()
+    
     # coefficient growth factor
     w = search_memory_overhead(pol_e)
 
     for gamma in roots:
         # Generate reduced lattice base
-        base = gen_reduce_null_base(k, p, n, gamma)
+        base = gen_null_base(k, p, pol_e, gamma, sparse=sparse).LLL()
 
         # Norm of the base
         rho = Integer(base.norm(1) - 1)
@@ -85,7 +86,6 @@ def search_base_rho_and_gamma(roots: list, k: int, p: int, phi: int, pol_e):
             return base, rho, gamma
 
     return None
-
 
 
 def search_minimal_degree(p: int, k: int, phi_pow: int, init_polynomial: callable) -> int:
@@ -103,23 +103,21 @@ def search_minimal_degree(p: int, k: int, phi_pow: int, init_polynomial: callabl
         int: return a degree n minimal for wich we can possibly construct a PMNS
     """
     pbits = p.nbits()
-    # knowing that n must verify that (2rho -1)^n > p^k
-    # n must be at least represent p over log2(phi) register.
-    # So n must be greater that the bit size of p^k, ie, #(p)2 * k 
-    n = int(pbits * k / phi_pow) + 1
     phi = 2**phi_pow
+    pk = p**k
 
-    # compute minimal degree n wich can lead to a possible contruction of PMNS
-    # here we approximate a value of the laticce G such that rho >= ||G||-1    
-    n = int(pbits * k / phi_pow) + 1
-    while round( 2 * search_memory_overhead(init_polynomial(n)) * (max(gen_overflow_matrix(init_polynomial(n))._list())/2 * 2**(k * pbits / n) * ceil(n / exp(1)) - 2)) >= phi:
+    n = Integer(int(pbits * k / phi_pow) + 1)
+    while 2 * search_memory_overhead(init_polynomial(n)) * ((factorial(n) * pk)**(1/n)/n-2) >= phi:
         n += 1
+        
     return n
+
+
 
 
 def cast_polynomial_to_minimal_representation(pol, p):
     """
-    Retrun polynomial pol with coefficients in signed samll representation with modulus p.
+    Return polynomial pol with coefficients in signed small representation with modulus p.
 
     Args:
         p (Interger): prime used to construction extension field
@@ -132,3 +130,19 @@ def cast_polynomial_to_minimal_representation(pol, p):
     """
     coefficients = [int(c) if c <= p//2 else int(c)-p for c in pol]
     return PR(coefficients)
+
+
+def is_irreducible_over_Fp(pol, p:int):
+    """
+    Check if the polynomial pol_e is irreducible over Fp.
+    
+    Args: 
+        p (prime) : prime used to construct extension field
+        pol (polynomial) : polynomial of degree k
+        
+    Return:
+        bool : True if the polynomial is irreducible over Fp else False
+    """
+    
+    pol_over_Fp = PolynomialRing(GF(p), "X")(pol)
+    return pol_over_Fp.is_irreducible()

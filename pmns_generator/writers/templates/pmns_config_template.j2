@@ -2,27 +2,26 @@
 Architecture used :
 ===================
 
-WORD_SIZE: {{phi_pow}}
+WORD_SIZE: {{container.get('phi_pow')}}
 
 ======================
 Field construct with :
 ======================
 
-POLYNOMIAL_EXTENSION: {{mod}}
+POLYNOMIAL_EXTENSION: {{container.get('mod')}}
 
-PRIME: {{p}}
+PRIME: {{container.get('p')}}
 
-PRIME SIZE: {{p.nbits()}}
+PRIME SIZE: {{container.get('p').nbits()}}
 
-EXTENSION_DEGREE: {{k}}
+EXTENSION_DEGREE: {{container .get('k')}}
 
 =====================
 PMNS construct with :
 =====================
 
-EXTERNAL_REDUCTION: {{E}}
+EXTERNAL_REDUCTION: {{container.get('E')}}
 
-GAMMA: {{gamma}}
+GAMMA: {{container.get('gamma')}}
 
-RHO: {{rho}}
-
+RHO: {{container.get('rho')}}

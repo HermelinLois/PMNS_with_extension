@@ -1,88 +1,35 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <time.h>
-# include "../codes/conversions_interface.h"
+# include <string.h>
+
 # include "conversions_values.h"
-# include "../codes/measurement_utils.c"
-
-
-void print_pol(int64_t *P){
-    for (int idx=0; idx<DEGREE; idx++)
-        printf("%lld  ", (long long)P[idx]);
-    printf("\n");
-}
-
-
-
-void check_validity(int64_t P[DEGREE], int64_t C[DEGREE], const char* method){
-    for (int i=0; i<DEGREE; i++){
-        if(C[i] != P[i]){
-            printf("/!\\ Error has been found /!\\ \n");
-            printf("Generate with Python :\n");
-            print_pol(C);
-            printf("Generate with C (with %s) :\n", method);
-            print_pol(P);
-            exit(1);
-        }
-    }
-}
-
-
-
-static inline void reset_polynomial(int64_t polynomial[DEGREE]){
-    for (int i=0; i<DEGREE; i++) 
-        polynomial[i]=0;
-}
-
-
+# include "../codes/interfaces/test_utils_interface.h"
+# include "../codes/interfaces/conversions_interface.h"
+# include "../codes/interfaces/test_utils_interface.h"
+# include "../codes/interfaces/measurement_utils_interface.h"
 
 void test_equality(){
     int64_t polynomial[DEGREE];
 
     for (int idx=0; idx<N_TESTS; idx++){
+        reset_polynomial(polynomial);
         convert_element_to_pmns_exact(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
-        check_validity(polynomial, CONVERTED_ELEMENTS_EXACT[idx], "Exact");
+        check_equality(CONVERTED_ELEMENTS_EXACT[idx], polynomial, "exact");
 
         reset_polynomial(polynomial);
-
         convert_element_to_pmns_pseudo_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
-        check_validity(polynomial, CONVERTED_ELEMENTS_PSEUDO_FAST[idx], "Pseudo-Fast");
+        check_equality(CONVERTED_ELEMENTS_PSEUDO_FAST[idx], polynomial, "pseudo-fast");
 
         reset_polynomial(polynomial);
-
         convert_element_to_pmns_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
-        check_validity(polynomial, CONVERTED_ELEMENTS_FAST[idx], "Fast");
+        check_equality(CONVERTED_ELEMENTS_FAST[idx], polynomial, "fast");
     }
     printf("Montgomery conversions seems to work with given parameters\n");
 }
 
 
-
-void rand_int(mp_limb_t out[EXTENSION_DEGREE][N_LIMBS]){
-	mpz_t p_mpz, rand_val;
-    mpz_init(p_mpz);
-    mpz_init(rand_val);
-
-    gmp_randstate_t state;
-    gmp_randinit_default(state);
-    gmp_randseed_ui(state, time(NULL));
-
-
-	mpz_import(p_mpz, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
-
-    for (int i=0; i<EXTENSION_DEGREE; i++){
-        mpz_urandomm(rand_val, state, p_mpz);
-        mpn_copyi(out[i], mpz_limbs_read(rand_val), N_LIMBS);
-    }
-
-    gmp_randclear(state);
-    mpz_clear(p_mpz);
-    mpz_clear(rand_val);
-}
-
-
-
-void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]), char* method_name){
+void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]), mp_limb_t tests_pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], char* method_name, gmp_randstate_t state){
 	uint64_t *cycles = (uint64_t *)calloc(N_BENCH_TESTS,sizeof(uint64_t)), *statTimer;
 	uint64_t timermin , timermax, meanTimermin =0,	medianTimer = 0,meanTimermax = 0;
     uint64_t t1,t2, diff_t;
@@ -91,12 +38,12 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
     int64_t polynomial[DEGREE];
 	
 	for(int i=0;i<N_BENCH_TESTS;i++){
-		rand_int(a);
+		rand_field_element(a, state);
 		to_pmns(polynomial, a);
 	}
 	
 	for(int i=0;i<N_BENCH_SAMPLES;i++){
-		rand_int(a);
+		mp_limb_t (*element_data)[N_LIMBS] = tests_pool[i];
 
 		timermin = (uint64_t)0x1<<63;
 		timermax = 0;
@@ -107,19 +54,12 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
             reset_polynomial(polynomial);
 
 			t1 = cpucyclesStart();
-			to_pmns(polynomial, a);
+			to_pmns(polynomial, element_data);
 			t2 = cpucyclesStop();
 
-			if (t2 < t1){
-				diff_t = 18446744073709551615ULL-t1;
-				diff_t = t2 + diff_t + 1;
-			} else { diff_t = t2-t1; }
-
-			if(timermin > diff_t) 
-                timermin = diff_t;
-			else 
-                if(timermax < diff_t) 
-                    timermax = diff_t;
+			diff_t = cycles_diff(t1, t2);
+			if(timermin > diff_t) timermin = diff_t;
+			if(timermax < diff_t) timermax = diff_t;
 			cycles[j]=diff_t;
 		}
         
@@ -143,15 +83,41 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
     printf("====================================================\n");
 }
 
-void test_speed(){
-    do_bench(convert_element_to_pmns_exact, "Exact");
-    do_bench(convert_element_to_pmns_pseudo_fast, "Pseudo-Fast");
-    do_bench(convert_element_to_pmns_fast, "Fast");
+
+
+static inline void gen_tests_pool(mp_limb_t pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state){
+    for (int i=0; i<N_BENCH_SAMPLES; i++)
+        rand_field_element(pool[i], state);
 }
 
-int main(){
-    test_equality();
-    test_speed();
+void test_speed(){
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+    gmp_randseed_ui(state, time(NULL));
+
+    mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS];
+    gen_tests_pool(tests_pool, state);
+
+    do_bench(convert_element_to_pmns_exact, tests_pool, "Exact", state);
+    do_bench(convert_element_to_pmns_pseudo_fast, tests_pool, "Pseudo-Fast", state);
+    do_bench(convert_element_to_pmns_fast, tests_pool, "Fast", state);
     
+    gmp_randclear(state);
+}
+
+
+
+int main(int argc, char *argv[]){
+    if (argc > 1 && strcmp(argv[1], "equality") == 0) {
+        test_equality();
+        return 0;
+    }
+
+    if (argc > 1 && strcmp(argv[1], "speed") == 0) {
+        test_speed();
+        return 0;
+    }
+
+    printf("Usable parameters: [equality|speed]\n");
     return 0;
 }

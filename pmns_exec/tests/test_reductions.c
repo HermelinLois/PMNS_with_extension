@@ -1,62 +1,49 @@
 # include <stdio.h>
 # include <stdlib.h>
-
-# include "../codes/reductions_interface.h"
+# include <string.h>
+# include "../codes/interfaces/test_utils_interface.h"
+# include "../codes/interfaces/operations_interface.h"
+# include "../codes/interfaces/reductions_interface.h"
 # include "reductions_values.h"
 
-void product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t PolB[DEGREE]){
-    const int PROD_SIZE = 2*DEGREE;
-    __int128 P[PROD_SIZE];
 
-    for (int deg=0; deg<PROD_SIZE; deg++) P[deg]=0;
-
-    for (int degA=0; degA<DEGREE; degA++){
-        __int128 ai = PolA[degA];
-        for (int degB=0; degB<DEGREE; degB++)
-            P[degA + degB] += ai * PolB[degB];
-    }
-
-    for (int i=0; i<DEGREE; i++) out[i] = P[i];
-
-    prod_pol_mat(__int128, out, P + DEGREE, EXT_MAT);
-}
-
-
-void print_pol(int64_t *P){
-    for (int idx=0; idx<DEGREE; idx++)
-        printf("%lld  ", (long long)P[idx]);
-    printf("\n");
-}
-
-
-void check_validity(int64_t P[DEGREE], int64_t C[DEGREE], const char* method){
-    for (int i=0; i<DEGREE; i++){
-        if(C[i] != P[i]){
-            printf("/!\\ Error has been found /!\\ \n");
-            printf("Generate with Python :\n");
-            print_pol(C);
-            printf("Generate with C (with %s) :\n", method);
-            print_pol(P);
-            exit(1);
-        }
-    }
-}
-
-
-int main(){
-    __int128 polynomial[DEGREE];
+void test_equality(){
+     __int128 polynomial[DEGREE];
     int64_t out[DEGREE];
 
     for (int idx=0; idx<N_TESTS; idx++){
         for (int i=0; i<DEGREE; i++) out[i] = 0;
-        product(polynomial, POL_A[idx], POL_B[idx]);
+        polynomials_product(polynomial, POL_A[idx], POL_B[idx]);
 
         reduction_montgomery_int128(out, polynomial, L, L_INV);
-        check_validity(out, MONTGOMERY_PROD_RED[idx], "Montgomery");
+        check_equality(out, MONTGOMERY_PROD_RED[idx], "Montgomery");
 
-        reduction_babai_int128(out, polynomial, L, L_INV_BABAI);
-        check_validity(out, BABAI_PROD_RED[idx], "Babai");
+        #ifdef IS_SPARSE
+        reduction_montgomery_linear(out, polynomial);
+        check_equality(out, MONTGOMERY_PROD_RED[idx], "Montgomery linear");
+        #endif
+
+        reduction_montgomery_toeplitz(out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
+        check_equality(out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz");
+
+        reduction_montgomery_toeplitz_recursive(out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
+        check_equality(out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz recursive");
+        
+# ifndef IS_SPARSE
+    reduction_babai_int128(out, polynomial, L, L_INV_BABAI);
+    check_equality(out, BABAI_PROD_RED[idx], "Babai");
+# endif
     }
+
+# ifdef IS_SPARSE
+    printf("Montgomery reductions seems to work with given parameters\n");
+# else 
     printf("Montgomery and Babai reductions seems to work with given parameters\n");
+# endif
+}
+
+
+int main(){
+    test_equality();
     return 0;
 }

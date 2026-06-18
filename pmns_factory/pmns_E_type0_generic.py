@@ -4,9 +4,9 @@
 # with E = X^n - lamb as the external reduction polynomial
 # ==================================================
 
-from sage.all import PolynomialRing, ZZ, ceil, Integer, GF, matrix
+from sage.all import PolynomialRing, ZZ, random_prime, GF
 from pmns_factory.core.parameters.params_gestion import search_minimal_degree as SMD, search_base_rho_and_gamma, search_memory_overhead, cast_polynomial_to_minimal_representation
-from pmns_factory.core.parameters.roots_gestion import is_gamma_feasible, search_roots
+from pmns_factory.core.parameters.roots_gestion import search_roots
 
 PR = PolynomialRing(ZZ, "X")
 X = PR("X")
@@ -70,22 +70,21 @@ def search_minimal_degree(p: int, k: int, phi_pow: int) -> int:
     init_polynomial = lambda n : gen_pol_e(n, INIT_LAMB)
     n = SMD(p, k, phi_pow, init_polynomial)
     
-    # as we search root of polynomial pol_e in extension field, wich ar e intergers of power k, 
-    # we have to let the degree n be a multiple of k
     return n
 
 
-def gen_parameters(p:int, k:int, phi_pow:int=64, name:str="z") -> dict:
+def gen_parameters(psize:int, k:int, phi_pow:int=64, name:str="z") -> dict:
     """
-    Function use to generate PMNS parameters given the prime p, the extension degree and the word size parameter of the architecture
+    Function use to generate PMNS parameters given the prime size psize, the extension degree and the word size parameter of the architecture
 
     Args:
-        p (int): prime use to construct extension field
+        psize (int): prime size use to generate prime
         k (int): extension degree
         name (str): name given to element to extension field element
         phi_pow (int, optional): word size use by the arcitecture (usully 2**word size). Defaults to 64.
 
     Returns:
+        p (Integer): prime used to construct pmns
         rho (int): upper bound of the coefficient for polynomial is PMNS
         gamma (extension field element): root of the external reduction polynomial and such that gamma^k 
             is an interger and consecutiv power of gamma are a base of the polynomial extension
@@ -94,11 +93,11 @@ def gen_parameters(p:int, k:int, phi_pow:int=64, name:str="z") -> dict:
         E (Polynomial): external reduction polynomial use by the PMNS
         mod (Polynomial): Polynomial used to construct the extension field
     """
-
-    p = Integer(p)
-    assert p.nbits() >= phi_pow, f"construction only works if the number of bits in prime (here {p=}) is greater or equal to {phi_pow=}"
-
-    # initailisation of the degree n and the parameter lambda
+    assert psize >= phi_pow, f"construction only works if the number of bits in prime (here {p=}) is greater or equal to {phi_pow=}"
+    
+    
+    # initailisation of elements
+    p = random_prime(2**psize, lbound=2**(psize-1))
     n = search_minimal_degree(p, k, phi_pow)
     lamb = INIT_LAMB
     phi = 2**phi_pow

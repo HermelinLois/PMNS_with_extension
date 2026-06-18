@@ -1,0 +1,70 @@
+# include "pmns_params.h"
+# include "../codes/interfaces/measurement_utils_interface.h"
+# include <gmp.h>
+# include <flint/fq.h>
+# include <NTL/ZZ.h>
+# include <NTL/ZZ_p.h>
+# include <NTL/ZZ_pX.h>
+# include <NTL/ZZ_pE.h>
+
+using namespace NTL;
+
+void construct_flint_field(fq_ctx_t field, fmpz_mod_ctx_t ctx) {
+    fmpz_t p;
+    mpz_t tmp;
+    fmpz_poly_t irred_poly;
+    fmpz_mod_poly_t modulus;
+
+    // convert P from mp_limb_t array to fmpz_t
+    fmpz_init(p);
+    mpz_init(tmp);
+    mpz_import(tmp, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
+    fmpz_set_mpz(p, tmp);
+    mpz_clear(tmp);
+
+    // reconstruct irreducible polynomial used to construct extension field
+    fmpz_poly_init(irred_poly);
+    {% for coeff in container.get('mod') %}
+    fmpz_poly_set_coeff_si(irred_poly, {{ loop.index0 }}, {{ coeff }});
+    {% endfor %}
+
+    // create modulus context
+    fmpz_mod_ctx_init(ctx, p);
+
+    // set irreducible polynomial to fit flint construction
+    fmpz_mod_poly_init(modulus, ctx);
+    fmpz_mod_poly_set_fmpz_poly(modulus, irred_poly, ctx);
+
+    // construction field object
+    fq_ctx_init_modulus(field, modulus, ctx, "z");
+
+    fmpz_poly_clear(irred_poly);
+    fmpz_mod_poly_clear(modulus, ctx);
+    fmpz_clear(p);
+}
+
+void free_flint_field(fq_ctx_t field, fmpz_mod_ctx_t ctx){
+    fq_ctx_clear(field);
+	fmpz_mod_ctx_clear(ctx);
+}
+
+void construct_ntl_field(){
+    // convert mpn to ntl format
+    mpz_t p_mpz;
+    mpz_init(p_mpz);
+    mpz_import(p_mpz, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
+
+    char* p_str = mpz_get_str(NULL, 10, p_mpz);
+    ZZ p = conv<ZZ>(p_str);
+    free(p_str);
+    mpz_clear(p_mpz);
+
+    //construct finite field
+    ZZ_p::init(p);
+    ZZ_pX irred_poly;
+    {% for coeff in container.get('mod') %}
+    SetCoeff(irred_poly, {{ loop.index0 }}, {{ coeff }});
+    {% endfor %}
+
+    ZZ_pE::init(irred_poly);
+}

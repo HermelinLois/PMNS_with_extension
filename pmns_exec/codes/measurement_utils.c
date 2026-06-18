@@ -1,11 +1,9 @@
+#include "./interfaces/measurement_utils_interface.h"
 # include <stdio.h>
 # include <gmp.h>
 #include <string.h>
 
-#define N_BENCH_TESTS 501
-#define N_BENCH_SAMPLES 1001
-
-static inline uint64_t cpucyclesStart(void){
+uint64_t cpucyclesStart(void){
 	unsigned hi, lo;
 	__asm__ __volatile__ (	"CPUID\n    "
 			"RDTSC\n    "
@@ -18,7 +16,7 @@ static inline uint64_t cpucyclesStart(void){
 	return ((uint64_t)lo)^(((uint64_t)hi)<<32);
 }
 
-static inline uint64_t cpucyclesStop(void){	
+uint64_t cpucyclesStop(void){	
 	unsigned hi, lo;
 	__asm__ __volatile__(	"RDTSCP\n    "
 			"mov %%edx, %0\n    "
@@ -29,6 +27,15 @@ static inline uint64_t cpucyclesStop(void){
 			: "%rax", "%rbx", "%rcx", "%rdx");
 	
 	return ((uint64_t)lo)^(((uint64_t)hi)<<32);
+}
+
+uint64_t cycles_diff(uint64_t t1, uint64_t t2){
+	uint64_t diff_t;
+	 if (t2 < t1){
+        diff_t = 18446744073709551615ULL - t1;
+        return t2 + diff_t + 1;
+    }
+	return t2 - t1;
 }
 
 void quicksort(uint64_t* t, int n){
