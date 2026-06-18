@@ -157,6 +157,128 @@ void polynomials_product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t Pol
     }
 }
 
+
+void small_toeplitz_vector_matrix(int n,  const __int128 *vector, const int64_t *toeplitz_matrix, __int128 *out, int with_mod_64bits){
+    for (int i = 0; i < n; i++) {
+        __int128 acc = 0;
+
+        for (int j = 0; j < n; j++) {
+            acc += vector[j] * (__int128)toeplitz_matrix[n - 1 + (i - j)];
+        }
+        out[i] = with_mod_64bits ? (int64_t)acc : acc;
+    }
+}
+
+
+void toeplitz_recursive_vector_matrix(int n, __int128 *out, const __int128 *vector, const int64_t *toeplitz_matrix, int with_mod_64bits){
+    if ((n % 2 != 0 && n % 3 != 0) || n <=3) {
+        small_toeplitz_vector_matrix(n, vector, toeplitz_matrix, out, with_mod_64bits);
+        return;
+    }
+
+    else if (n % 2 == 0) {
+        int m = n / 2;
+
+        // Repartition of the input vector into 3 parts
+        const __int128 *v0 = vector;
+        const __int128 *v1 = vector + m;
+        __int128 v_sum_01[m];
+
+        for (int i = 0; i < m; i++)
+            v_sum_01[i] = v0[i] + v1[i];
+
+        const int64_t *M0 = toeplitz_matrix;
+        const int64_t *M1 = M0 + m;
+        const int64_t *M2 = M1 + m;
+
+        // Create new submatrices for the recursive calls
+        int64_t T_sub_M12[2 * m - 1];
+        int64_t T_sub_M10[2 * m - 1];
+
+        for (int i = 0; i < 2 * m - 1; i++) {
+            T_sub_M12[i] = M1[i] - M2[i];
+            T_sub_M10[i] = M1[i] - M0[i];
+        }
+
+        // Recursive calls to compute the products with the submatrices
+        __int128 p0[m], p1[m], p2[m];
+        memset(p0, 0, sizeof(p0));
+        memset(p1, 0, sizeof(p1));
+        memset(p2, 0, sizeof(p2));
+
+        toeplitz_recursive_vector_matrix(m, p0, v_sum_01, M1, with_mod_64bits);
+        toeplitz_recursive_vector_matrix(m, p1, v0, T_sub_M12, with_mod_64bits);
+        toeplitz_recursive_vector_matrix(m, p2, v1, T_sub_M10, with_mod_64bits);
+
+        // Combine the results of the recursive calls to form the final output
+        for (int i = 0; i < m; i++) {
+            out[i] = (with_mod_64bits) ? (__int128)(int64_t)(p0[i] - p2[i]) : p0[i] - p2[i];
+            out[i + m] = (with_mod_64bits) ? (__int128)(int64_t)(p0[i] - p1[i]) : p0[i] - p1[i];
+        }
+    }
+
+    else if (n % 3 == 0) {
+        int m = n / 3;
+
+        // Repartition of the input vector into 3 parts
+        const __int128 *v0 = vector;
+        const __int128 *v1 = vector + m;
+        const __int128 *v2 = vector + 2 * m;
+        __int128 v_sub_v02[m];
+        __int128 v_sub_v12[m];
+        __int128 v_sub_v01[m];
+
+        for (int i = 0; i < m; i++) {
+            v_sub_v02[i] = v0[i] - v2[i];
+            v_sub_v12[i] = v1[i] - v2[i];
+            v_sub_v01[i] = v0[i] - v1[i];
+        }
+
+        const int64_t *M0 = toeplitz_matrix;
+        const int64_t *M1 = M0 + m;
+        const int64_t *M2 = M1 + m;
+        const int64_t *M3 = M2 + m;
+        const int64_t *M4 = M3 + m;
+
+        int64_t T_sum_M012[2 * m - 1];
+        int64_t T_sum_M123[2 * m - 1];
+        int64_t T_sum_M234[2 * m - 1];
+
+        for (int i = 0; i < 2 * m - 1; i++) {
+            T_sum_M012[i] = M0[i] + M1[i] + M2[i];
+            T_sum_M123[i] = M1[i] + M2[i] + M3[i];
+            T_sum_M234[i] = M2[i] + M3[i] + M4[i];
+        }
+
+        __int128 p0[m], p1[m], p2[m], p3[m], p4[m], p5[m];
+        memset(p0, 0, sizeof(p0));
+        memset(p1, 0, sizeof(p1));
+        memset(p2, 0, sizeof(p2));
+        memset(p3, 0, sizeof(p3));
+        memset(p4, 0, sizeof(p4));
+        memset(p5, 0, sizeof(p5));
+        
+
+        toeplitz_recursive_vector_matrix(m, p0, v2, T_sum_M012, with_mod_64bits);
+        toeplitz_recursive_vector_matrix(m, p1, v1, T_sum_M123, with_mod_64bits);
+        toeplitz_recursive_vector_matrix(m, p2, v0, T_sum_M234, with_mod_64bits);
+
+        toeplitz_recursive_vector_matrix(m, p3, v_sub_v02, M2, with_mod_64bits);
+        toeplitz_recursive_vector_matrix(m, p4, v_sub_v12, M1, with_mod_64bits);
+        toeplitz_recursive_vector_matrix(m, p5, v_sub_v01, M3, with_mod_64bits);
+
+        for (int i = 0; i < m; i++) {
+            out[i] = with_mod_64bits ? (__int128)(int64_t)(p0[i] + p3[i] + p4[i]) : p0[i] + p3[i] + p4[i];
+            out[i + m] = with_mod_64bits ? (__int128)(int64_t)(p1[i] + p5[i] - p4[i]) : p1[i] + p5[i] - p4[i];
+            out[i + 2 * m] = with_mod_64bits ? (__int128)(int64_t)(p2[i] - p3[i] - p5[i]) : p2[i] - p3[i] - p5[i];
+        }
+    }
+}
+
+
+
+
+
 #ifndef IS_SPARSE
 void coeff_shift_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE], int n_shift){
     for (int i=0; i<DEGREE; i++)
