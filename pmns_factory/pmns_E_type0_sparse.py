@@ -70,8 +70,8 @@ def compute_lambda_max(gammak:int, n:int, phi_pow:int) -> int:
     # As we set that E = X^n - lambda and E(gamma) = p, we can compute maximum value of lambda.
     # this value depend on the basis. Here we construct a basis inspired by Bouvier and Imbert approach.
     phi = 2**phi_pow
-    solve_part = sqrt(1 + (2*phi - 2*gammak + 2)/((n-1) * (gammak - 2)**2) + 1/((n-1) * (gammak - 2))**2) - 1
-    max_lambd = ceil((gammak -2)/2 * solve_part - 1/(2*n - 2))
+    part = sqrt(1 + (2*phi - 2*gammak + 2)/((n-1) * (gammak - 2)**2) + 1/((n-1) * (gammak - 2))**2) - 1
+    max_lambd = ceil((gammak -2)/2 * part - 1/(2*n - 2))
 
     return max_lambd
 

@@ -1,6 +1,7 @@
 #include "./interfaces/operations_interface.h"
 #include "./interfaces/reductions_interface.h"
 #include "../params/pmns_params.h"
+#include <string.h>
 
 // compute the product of an int64_t polynomial with an int64_t coefficient and add the result to an int128 polynomial
 void addmul_pol64_int64(__int128 out[DEGREE], const int64_t polynomial[DEGREE], int64_t coeff){
@@ -165,13 +166,16 @@ void small_toeplitz_vector_matrix(int n,  const __int128 *vector, const int64_t 
         for (int j = 0; j < n; j++) {
             acc += vector[j] * (__int128)toeplitz_matrix[n - 1 + (i - j)];
         }
-        out[i] = with_mod_64bits ? (int64_t)acc : acc;
+    if( with_mod_64bits )
+        out[i] = (int64_t)acc;
+    else 
+        out[i] = acc;
     }
 }
 
 
 void toeplitz_recursive_vector_matrix(int n, __int128 *out, const __int128 *vector, const int64_t *toeplitz_matrix, int with_mod_64bits){
-    if ((n % 2 != 0 && n % 3 != 0) || n <=3) {
+    if ((n % 2 != 0 && n % 3 != 0) || n <= 30) {
         small_toeplitz_vector_matrix(n, vector, toeplitz_matrix, out, with_mod_64bits);
         return;
     }
@@ -337,3 +341,6 @@ void linear_prod_pol_lattice_i128(__int128 out[DEGREE], int64_t polynomial[DEGRE
     }
 }
 #endif
+
+
+
