@@ -6,8 +6,10 @@ static int64_t POL_B[N_TESTS][DEGREE] = {{polB}};
 
 static int64_t MONTGOMERY_PROD_RED[N_TESTS][DEGREE] = {{montgomery_red}};
 
+{% if container.get('is_toeplitz_usable') %}
 static int64_t MONTGOMERY_PROD_RED_TOEPLITZ[N_TESTS][DEGREE] = {{montgomery_red_toeplitz}};
+{% endif %}
 
-{% if container.params.get('struct') != container.struct_sparse %}
+{% if container.get('is_babai_usable') %}
 static int64_t BABAI_PROD_RED[N_TESTS][DEGREE] = {{babai_red}};
 {% endif %}

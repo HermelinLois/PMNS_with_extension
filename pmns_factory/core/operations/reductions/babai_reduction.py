@@ -7,7 +7,7 @@
 #   > rounding reduction with limited precision
 # ==================================================
 
-from sage.all import vector, ZZ, floor, matrix, ceil, PolynomialRing, log
+from sage.all import vector, ZZ, floor, matrix, RR, Integer, PolynomialRing, log
 from ...parameters.params_gestion import search_memory_overhead
 
 PR = PolynomialRing(ZZ, "X")
@@ -141,7 +141,7 @@ def gen_params_for_babai(L, phi_pow:int, rho:int, pol_e):
     maximum_value = max(abs(c) for c in l_inv)
     h1 = floor(log((2**(phi_pow - 1) -0.5) / (maximum_value), 2))
     
-    L_inv_babai = matrix([[round(2**h1 * x) for x in vect] for vect in l_inv])
+    L_inv_babai = matrix([ [Integer((RR(2**h1 * x)).round()) for x in vect] for vect in l_inv])
 
     # h2 must verify that low(v / 2**h2) <= 2**(phi_pow -1)
     # so v / 2**h2 < 2**(phi_pow -1) + 1 <==> h2 > log2(v/ 2**(phi_pow -1) + 1)

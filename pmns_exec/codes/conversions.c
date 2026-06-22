@@ -69,10 +69,10 @@ void convert_element_to_pmns_pseudo_fast(int64_t out[DEGREE], const mp_limb_t el
             addmul_pol64_int64_mpn(POL_LIMBS, partial_polynomial, PMNS_THETA_PSEUDO_FAST[i], part);
         }
 
-    # ifndef IS_SPARSE
-            addmul_polmpn_pol64(POL_LIMBS, vector, partial_polynomial, PMNS_FIELD_ROOTS[deg]);
+    # if ELEMENTS_EXPRESS_IN_GAMMA_BASIS
+        addmul_polmpn_Xpow_modE(POL_LIMBS, vector, partial_polynomial, deg);
     # else
-            addmul_polmpn_Xpow_modE(POL_LIMBS, vector, partial_polynomial, deg);
+        addmul_polmpn_pol64(POL_LIMBS, vector, partial_polynomial, PMNS_FIELD_ROOTS[deg]);
     # endif
     }
 
@@ -148,7 +148,7 @@ static inline void init_element_times_phipow(mpz_t out[DEGREE], const mp_limb_t 
 }
 
 
-# ifndef IS_SPARSE
+# if !ELEMENTS_EXPRESS_IN_GAMMA_BASIS
 // compute the product of the given element with the transition matrix and apply modulus p to the result
 // with our implementation, element are express in gamma basis, no need to convert element
 
@@ -177,7 +177,7 @@ void convert_element_to_pmns_exact(int64_t out[DEGREE], const mp_limb_t element_
     
     init_element_times_phipow(vector, element_data, N_INT_RED_CLASSICAL);
 
-# ifndef IS_SPARSE
+# if !ELEMENTS_EXPRESS_IN_GAMMA_BASIS
     element_change_basis(vector, vector);
 # endif
 

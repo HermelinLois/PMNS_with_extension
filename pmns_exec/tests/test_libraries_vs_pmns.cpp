@@ -17,11 +17,13 @@ void polynomials_product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t Pol
 
 void reduction_montgomery_int128(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]);
 
+#if IS_TOEPLITZ_USABLE
 void reduction_montgomery_toeplitz(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2*DEGREE - 1], const uint64_t sublattice_inv[2*DEGREE - 1]);
 
 void reduction_montgomery_toeplitz_recursive(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2*DEGREE - 1], const uint64_t sublattice_inv[2*DEGREE - 1]);
+#endif
 
-#ifdef IS_SPARSE
+#if IS_DOUBLE_SPARSE
 void reduction_montgomery_linear(int64_t out[DEGREE], __int128 polynomial[DEGREE]);
 #endif
 }
@@ -52,6 +54,7 @@ static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGRE
     reduction_montgomery_int128(poly_res, tmp, L, L_INV);
 }
 
+#if IS_TOEPLITZ_USABLE
 static inline void pmns_toeplitz_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     __int128_t tmp[DEGREE];
     polynomials_product(tmp, poly_a, poly_b);
@@ -63,8 +66,9 @@ static inline void pmns_toeplitz_recursive_operation(int64_t poly_res[DEGREE], i
     polynomials_product(tmp, poly_a, poly_b);
     reduction_montgomery_toeplitz_recursive(poly_res, tmp, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
 }
+#endif
 
-#ifdef IS_SPARSE
+#if IS_DOUBLE_SPARSE
 static inline void pmns_linear_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     __int128_t tmp[DEGREE];
     polynomials_product(tmp, poly_a, poly_b);
@@ -327,7 +331,7 @@ void do_pmns_generic_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_D
     printf("====================================================\n");
 }
 
-
+#if IS_TOEPLITZ_USABLE
 void do_pmns_toeplitz_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
 	uint64_t *cycles = (uint64_t *)calloc(N_BENCH_TESTS,sizeof(uint64_t)), *statTimer;
 	uint64_t timermin , timermax, meanTimermin =0,	medianTimer = 0,meanTimermax = 0;
@@ -439,8 +443,9 @@ void do_pmns_toeplitz_recursive_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][
     printf("| %-20s : %-26llu|\n", "Mean Maximum cycles", (unsigned long long)(meanTimermax/N_BENCH_SAMPLES));
     printf("====================================================\n");
 }
+#endif
 
-#ifdef IS_SPARSE
+#if IS_DOUBLE_SPARSE
 void do_pmns_linear_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
 	uint64_t *cycles = (uint64_t *)calloc(N_BENCH_TESTS,sizeof(uint64_t)), *statTimer;
 	uint64_t timermin , timermax, meanTimermin =0,	medianTimer = 0,meanTimermax = 0;
@@ -512,12 +517,15 @@ void test_libraries_vs_pmns(){
 
 
     do_pmns_generic_bench(pool, "PMNS (Generic matrix)");
+
+	#if IS_TOEPLITZ_USABLE
     do_pmns_toeplitz_bench(pool, "PMNS (Toeplitz matrix)");
 	do_pmns_toeplitz_recursive_bench(pool, "PMNS (Toeplitz recursive matrix)");
+	#endif
 	
-#ifdef IS_SPARSE
+	#if IS_DOUBLE_SPARSE
     do_pmns_linear_bench(pool, "PMNS (Linear representation)");
-#endif
+	#endif
 
     do_flint_bench(pool, "FLINT");
     do_ntl_bench(pool, "NTL");

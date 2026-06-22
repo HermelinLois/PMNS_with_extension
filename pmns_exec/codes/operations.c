@@ -95,26 +95,6 @@ void addmul_polmpn_Xpow_modE(int n_limbs, mp_limb_t out[DEGREE][n_limbs], mp_lim
     }
 }
 
-void prod_pol_mat_toeplitz_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE], const uint64_t matrix_toeplitz[2*DEGREE - 1]) {
-    for (int i = 0; i < DEGREE; i++) {
-        __int128 acc = 0;
-        for (int j = 0; j < DEGREE; j++) {
-            acc += (__int128)polynomial[j] * (__int128)matrix_toeplitz[DEGREE - 1 - j + i];
-        }
-        out[i] = (uint64_t)acc;
-    }
-}
-
-void prod_pol_mat_toeplitz_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE], const int64_t matrix_toeplitz[2*DEGREE - 1]) {
-    for (int i = 0; i < DEGREE; i++) {
-        __int128 acc = 0;
-        for (int j = 0; j < DEGREE; j++) {
-            acc += (__int128)polynomial[j] * (__int128)matrix_toeplitz[DEGREE - 1 - j + i];
-        }
-        out[i] = acc;
-    }
-}
-
 
 void prod_pol_mat_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t matrix[DEGREE][DEGREE]) {
     for (int i = 0; i < DEGREE; i++) {
@@ -173,6 +153,26 @@ void small_toeplitz_vector_matrix(int n,  const __int128 *vector, const int64_t 
     }
 }
 
+# if IS_TOEPLITZ_USABLE
+void prod_pol_mat_toeplitz_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE], const uint64_t matrix_toeplitz[2*DEGREE - 1]) {
+    for (int i = 0; i < DEGREE; i++) {
+        __int128 acc = 0;
+        for (int j = 0; j < DEGREE; j++) {
+            acc += (__int128)polynomial[j] * (__int128)matrix_toeplitz[DEGREE - 1 - j + i];
+        }
+        out[i] = (uint64_t)acc;
+    }
+}
+
+void prod_pol_mat_toeplitz_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE], const int64_t matrix_toeplitz[2*DEGREE - 1]) {
+    for (int i = 0; i < DEGREE; i++) {
+        __int128 acc = 0;
+        for (int j = 0; j < DEGREE; j++) {
+            acc += (__int128)polynomial[j] * (__int128)matrix_toeplitz[DEGREE - 1 - j + i];
+        }
+        out[i] = acc;
+    }
+}
 
 void toeplitz_recursive_vector_matrix(int n, __int128 *out, const __int128 *vector, const int64_t *toeplitz_matrix, int with_mod_64bits){
     if ((n % 2 != 0 && n % 3 != 0) || n <= 30) {
@@ -278,12 +278,12 @@ void toeplitz_recursive_vector_matrix(int n, __int128 *out, const __int128 *vect
         }
     }
 }
+# endif
 
 
 
 
-
-#ifndef IS_SPARSE
+#if IS_BABAI_USABLE
 void coeff_shift_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE], int n_shift){
     for (int i=0; i<DEGREE; i++)
         out[i] = (int64_t)(polynomial[i] >> n_shift);
@@ -293,8 +293,9 @@ void coeff_shift_i128(__int128 out[DEGREE], __int128 polynomial[DEGREE], int n_s
     for (int i=0; i<DEGREE; i++)
         out[i] = polynomial[i] >> n_shift;
 }
-#else
+#endif
 
+#if IS_DOUBLE_SPARSE
 void linear_prod_pol_lattice_inv_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE]){
     for (int i=0; i<EXTENSION_DEGREE; i++){
         __int128 coeff_1 = polynomial[i];

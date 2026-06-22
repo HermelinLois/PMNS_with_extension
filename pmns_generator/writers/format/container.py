@@ -51,6 +51,11 @@ class PMNSContainer:
 
         self.params['n'] = pmns['E'].degree()
         self.params['n_limbs'] = ceil(pmns['p'].nbits() / pmns['phi_pow'])
+
+        self.params['is_toeplitz_usable'] = (Etype == 0)
+        self.params['is_elements_in_gamma_basis'] = pmns['gamma'] == pmns['gamma'].parent().gen()
+        self.params['is_double_sparse'] = structure == self.struct_sparse
+        self.params['is_babai_usable'] = not self.params['is_double_sparse']        
         
         self._build()
 
@@ -99,7 +104,7 @@ class PMNSContainer:
         E = self.params['E']
         phi_pow = self.params['phi_pow']
         
-        if struct == self.struct_sparse:
+        if self.params['is_double_sparse']:
             # compute parameters for sparse reduction with External reduction of form X^n - lambda with lambda = -E[0]
             # and with gamma such that gamma^k is an integer
             k = self.params['k']
@@ -120,7 +125,7 @@ class PMNSContainer:
             prod = (gamma_pow_k_mod * lambda_inv_mod) % phi
             self.params['gamma_pow_n_lambdda_mod'] = prod if prod <= phi//2 else prod - phi
         
-        else :
+        if self.params['is_babai_usable']:
             # compute parameters for Babai reduction
             L = self.params['L_origin']
             rho = self.params['rho']

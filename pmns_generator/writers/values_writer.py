@@ -80,22 +80,27 @@ def write_reduction_values(env, n_test, container, convs_pool) -> None:
         polynomials_b.append(pol_B)
         
         montgomery_red = fast_montgomery_reduction(prod, L, L_inv)
-        montgomery_red_toeplitz = fast_montgomery_reduction(prod, mat_M, mat_N)
-        
         montgomery_reductions.append(montgomery_red)
-        montgomery_reductions_toeplitz.append(montgomery_red_toeplitz)
+
+        if container.get('is_toeplitz_usable'):
+            montgomery_red_toeplitz = fast_montgomery_reduction(prod, mat_M, mat_N)
+            montgomery_reductions_toeplitz.append(montgomery_red_toeplitz)
         
-        if struct != STRUCT_SPARSE:
+        if container.get('is_babai_usable'):
             babai_red = babai_rounding_limited_reduction(prod, container)     
             babai_reductions.append(babai_red)
             
     tests_params = {'polA': format.format_matrix_to_int64(polynomials_a), 
                     'polB': format.format_matrix_to_int64(polynomials_b), 
-                    'montgomery_red': format.format_matrix_to_int64(montgomery_reductions), 
-                    'montgomery_red_toeplitz': format.format_matrix_to_int64(montgomery_reductions_toeplitz),
-                    'babai_red': format.format_matrix_to_int64(babai_reductions),
+                    'montgomery_red': format.format_matrix_to_int64(montgomery_reductions),
                     'container': container}
     
+    if container.get('is_toeplitz_usable'):
+        tests_params['montgomery_red_toeplitz'] = format.format_matrix_to_int64(montgomery_reductions_toeplitz)
+
+    if container.get('is_babai_usable'):
+        tests_params['babai_red'] = format.format_matrix_to_int64(babai_reductions)
+
     template = env.get_template("reductions_values_template.j2")
     rendered_params = template.render(tests_params)
     

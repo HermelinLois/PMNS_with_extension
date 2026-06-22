@@ -18,27 +18,29 @@ void test_equality(){
         reduction_montgomery_int128(out, polynomial, L, L_INV);
         check_equality(out, MONTGOMERY_PROD_RED[idx], "Montgomery");
 
-        #ifdef IS_SPARSE
+        #if IS_DOUBLE_SPARSE
         reduction_montgomery_linear(out, polynomial);
         check_equality(out, MONTGOMERY_PROD_RED[idx], "Montgomery linear");
         #endif
 
+        #if IS_BABAI_USABLE
+        reduction_babai_int128(out, polynomial, L, L_INV_BABAI);
+        check_equality(out, BABAI_PROD_RED[idx], "Babai");
+        #endif
+
+        #if IS_TOEPLITZ_USABLE
         reduction_montgomery_toeplitz(out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
         check_equality(out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz");
 
         reduction_montgomery_toeplitz_recursive(out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
         check_equality(out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz recursive");
-        
-# ifndef IS_SPARSE
-    reduction_babai_int128(out, polynomial, L, L_INV_BABAI);
-    check_equality(out, BABAI_PROD_RED[idx], "Babai");
-# endif
+        #endif
     }
 
-# ifdef IS_SPARSE
-    printf("Montgomery reductions seems to work with given parameters\n");
-# else 
+# if IS_BABAI_USABLE
     printf("Montgomery and Babai reductions seems to work with given parameters\n");
+# else 
+    printf("Montgomery reductions seems to work with given parameters\n");
 # endif
 }
 
