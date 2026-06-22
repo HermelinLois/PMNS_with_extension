@@ -138,7 +138,7 @@ void polynomials_product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t Pol
     }
 }
 
-
+# if IS_TOEPLITZ_USABLE
 void small_toeplitz_vector_matrix(int n,  const __int128 *vector, const int64_t *toeplitz_matrix, __int128 *out, int with_mod_64bits){
     for (int i = 0; i < n; i++) {
         __int128 acc = 0;
@@ -153,7 +153,7 @@ void small_toeplitz_vector_matrix(int n,  const __int128 *vector, const int64_t 
     }
 }
 
-# if IS_TOEPLITZ_USABLE
+
 void prod_pol_mat_toeplitz_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE], const uint64_t matrix_toeplitz[2*DEGREE - 1]) {
     for (int i = 0; i < DEGREE; i++) {
         __int128 acc = 0;

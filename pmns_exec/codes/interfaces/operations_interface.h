@@ -17,7 +17,7 @@ void prod_pol_mat_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE], const in
 
 void prod_pol_mat_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE], const int64_t matrix[DEGREE][DEGREE]);
 
-#if ELEMENTS_EXPRESS_IN_GAMMA_BASIS
+#if IS_ELEMENTS_IN_GAMMA_BASIS
 void addmul_polmpn_Xpow_modE(int n_limbs, mp_limb_t out[DEGREE][n_limbs], mp_limb_t polmpn[DEGREE][n_limbs], unsigned int pow);
 #endif
 

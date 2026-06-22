@@ -175,7 +175,7 @@ def gen_parameters(psize:int, k:int, max_wanted_lamb:int=None, phi_pow:int=64, n
     if max_wanted_lamb is None:
         max_wanted_lamb = 2**(phi_pow - 1) - 1  
           
-    n = search_minimal_degree(psize, k, phi_pow)
+    n = 90 #search_minimal_degree(psize, k, phi_pow)
     low_bound, high_bound = compute_gammak_bounds(psize, k, n, phi_pow)
 
     # test if construction works
@@ -195,6 +195,7 @@ def gen_parameters(psize:int, k:int, max_wanted_lamb:int=None, phi_pow:int=64, n
 
         # delta = compute_delta(n, lamb_max, gammak, phi_pow)
         gamma_n = gammak**(n//k)
+        print(gammak)
         p = next_probable_prime(gamma_n - lamb_max)
         curr_lamb = gamma_n - p
         
