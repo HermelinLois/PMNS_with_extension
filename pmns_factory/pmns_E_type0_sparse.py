@@ -196,7 +196,6 @@ def gen_parameters(psize:int, k:int, max_wanted_lamb:int=None, phi_pow:int=64, n
 
         # delta = compute_delta(n, lamb_max, gammak, phi_pow)
         gamma_n = gammak**(n//k)
-        print(gammak)
         p = next_probable_prime(gamma_n - lamb_max)
         curr_lamb = gamma_n - p
         
