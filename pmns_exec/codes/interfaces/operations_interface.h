@@ -26,9 +26,9 @@ void prod_pol_mat_toeplitz_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE],
 
 void prod_pol_mat_toeplitz_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE], const int64_t matrix_toeplitz[2*DEGREE - 1]);
 
-void prod_pol_mat_toeplitz_recursive_i128(int n, __int128 *out, const int64_t *vector, const int64_t *toeplitz_matrix);
+void prod_pol_mat_toeplitz_recursive_i64(int n, __int128 *out, const __int128 *vector, const uint64_t *toeplitz_matrix);
 
-void prod_pol_mat_toeplitz_recursive_i64(int n, int64_t *out, const __int128 *vector, const int64_t *toeplitz_matrix);
+void prod_pol_mat_toeplitz_recursive_i128(int n, __int128 *out, const __int128 *vector, const int64_t *toeplitz_matrix);
 #endif
 
 #if IS_BABAI_USABLE

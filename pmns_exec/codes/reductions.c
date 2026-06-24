@@ -181,14 +181,14 @@ void reduction_montgomery_toeplitz(int64_t out[DEGREE], __int128 polynomial[DEGR
 }
 
 
-void reduction_montgomery_toeplitz_recursive(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2 * DEGREE - 1],  const uint64_t sublattice_inv[2 * DEGREE - 1]){
-    int64_t Q[DEGREE] = {0};
+void reduction_montgomery_toeplitz_recursive(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2 * DEGREE - 1], const uint64_t sublattice_inv[2 * DEGREE - 1]){
+    __int128 Q[DEGREE] = {0};
     __int128 T[DEGREE] = {0};
 
-    prod_pol_mat_toeplitz_recursive_i64(DEGREE, Q, polynomial, (const int64_t *)sublattice_inv);
+    prod_pol_mat_toeplitz_recursive_i64(DEGREE, Q, polynomial, sublattice_inv);
     prod_pol_mat_toeplitz_recursive_i128(DEGREE, T, Q, sublattice);
 
     for (int i = 0; i < DEGREE; i++)
-        out[i] = (int64_t)((T[i] + polynomial[i]) >> 64);
+        out[i] = (T[i] + polynomial[i]) >> 64;
 }
 # endif
