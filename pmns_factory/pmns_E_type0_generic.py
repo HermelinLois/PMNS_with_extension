@@ -73,7 +73,7 @@ def search_minimal_degree(p: int, k: int, phi_pow: int) -> int:
     return n
 
 
-def gen_parameters(psize:int, k:int, phi_pow:int=64, name:str="z") -> dict:
+def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str="z") -> dict:
     """
     Function use to generate PMNS parameters given the prime size psize, the extension degree and the word size parameter of the architecture
 
@@ -98,7 +98,9 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, name:str="z") -> dict:
     
     # initailisation of elements
     p = random_prime(2**psize, lbound=2**(psize-1))
-    n = search_minimal_degree(p, k, phi_pow)
+    if n is None:
+        n = search_minimal_degree(p, k, phi_pow)
+
     lamb = INIT_LAMB
     phi = 2**phi_pow
 

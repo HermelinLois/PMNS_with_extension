@@ -40,7 +40,8 @@ def get_container(args):
             print(f"\033[93m{head}\033[0m")
     
     pmns_gen = PMNS_CONFIG[args.Etype][args.struct]
-    pmns_params = pmns_gen.gen_parameters(args.nbits, args.k)
+    n = None if args.n == 0 else args.n
+    pmns_params = pmns_gen.gen_parameters(args.nbits, args.k, n=n)
 
     container = PMNSContainer(args.Etype, pmns_params, structure=args.struct)
     return container, False
@@ -51,6 +52,7 @@ ACTION_VALUES = "new_values"
 
 def get_args():
     parser = argparse.ArgumentParser("PMNS parameters")
+    parser.add_argument("-n", type=int, default=None, help=f"Minimal wanted degree of the reduction polynomial. If not provided, the minimal degree will be computed.")
     parser.add_argument("-ntests", type=int, default=100, help="Number of test vectors to generate (default: 100)")
     parser.add_argument("-nbits", type=int, default=128, help="Prime bit size used to construct the field (default: 128)")
     parser.add_argument("-k", type=int, default=2, help="Extension degree k of the extension field (default: 2)")

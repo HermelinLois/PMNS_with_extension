@@ -68,7 +68,7 @@ def search_minimal_degree(p: int, k: int, phi_pow: int) -> int:
 
 
 
-def gen_parameters(psize:int, k:int, phi_pow:int=64, name:str="z") -> dict: 
+def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str="z") -> dict: 
     """
     Function use to generate PMNS parameters given the prime size, the extension degree and the word size parameter of the architecture
     This implementation use a specific construction of irreducible polynomial to construct extension field.
@@ -98,7 +98,8 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, name:str="z") -> dict:
     # this condition permit to know if we can construct irreducible polynomial to construct extension field
     assert gcd(k, p-1) == k, f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
 
-    n = search_minimal_degree(p, k, phi_pow)
+    if n is None:
+        n = search_minimal_degree(p, k, phi_pow)
     lamb = INIT_LAMB
     phi = 2**phi_pow
 

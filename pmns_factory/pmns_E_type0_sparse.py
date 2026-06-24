@@ -149,7 +149,7 @@ def search_minimal_degree(psize: int, k: int, phi_pow: int) -> int:
     return k * ceil(n/k)
 
 
-def gen_parameters(psize:int, k:int, max_wanted_lamb:int=None, phi_pow:int=64, name:str="z"):
+def gen_parameters(psize:int, k:int, max_wanted_lamb:int=None, phi_pow:int=64, n:int=None, name:str="z"):
     """
     Generate PMNS parameters of type 0 with sparse reduction polynomial.
     Here gammak represent gamma^k and we search for a gamma such that gamma^k 
@@ -175,7 +175,8 @@ def gen_parameters(psize:int, k:int, max_wanted_lamb:int=None, phi_pow:int=64, n
     if max_wanted_lamb is None:
         max_wanted_lamb = 2**(phi_pow - 1) - 1  
           
-    n = 90 #search_minimal_degree(psize, k, phi_pow)
+    if n is None:
+        n = search_minimal_degree(psize, k, phi_pow)
     low_bound, high_bound = compute_gammak_bounds(psize, k, n, phi_pow)
 
     # test if construction works
