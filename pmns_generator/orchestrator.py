@@ -40,8 +40,7 @@ def get_container(args):
             print(f"\033[93m{head}\033[0m")
     
     pmns_gen = PMNS_CONFIG[args.Etype][args.struct]
-    n = None if args.n == 0 else args.n
-    pmns_params = pmns_gen.gen_parameters(args.nbits, args.k, n=n)
+    pmns_params = pmns_gen.gen_parameters(args.nbits, args.k, n=args.n)
 
     container = PMNSContainer(args.Etype, pmns_params, structure=args.struct)
     return container, False
