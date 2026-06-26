@@ -10,6 +10,11 @@
 # include "../codes/interfaces/measurement_utils_interface.h"
 
 void test_equality(){
+    if (N_TESTS == 0) {
+        printf("No tests to run. To add tests, run 'make new-tests NTESTS=<number_of_tests>'\n");
+        exit(1);
+    }
+
     int64_t polynomial[DEGREE];
 
     for (int idx=0; idx<N_TESTS; idx++){
@@ -25,7 +30,7 @@ void test_equality(){
         convert_element_to_pmns_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
         check_equality(CONVERTED_ELEMENTS_FAST[idx], polynomial, "fast");
     }
-    printf("Montgomery conversions seems to work with given parameters\n");
+    printf("Conversions seems to work with given parameters\n");
 }
 
 

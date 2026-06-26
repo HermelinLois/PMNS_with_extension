@@ -8,6 +8,11 @@
 
 
 void test_equality(){
+    if (N_TESTS == 0) {
+        printf("No tests to run. To add tests, run 'make new-tests NTESTS=<number_of_tests>'\n");
+        exit(1);
+    }
+
      __int128 polynomial[DEGREE];
     int64_t out[DEGREE];
 
