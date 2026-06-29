@@ -4,30 +4,36 @@
 # include <string.h>
 # include <gmp.h>
 
-
+/*=================================================================
+                        BABAI REDUCTION FUNCTION 
+=================================================================*/
 # if IS_BABAI_USABLE
 void reduction_babai_int128(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]) {
     __int128 S[DEGREE];
-    int64_t SL[DEGREE];
-    int64_t PH2[DEGREE];
+    __int128 SL[DEGREE];
+    __int128 PH2[DEGREE];
 
-    coeff_shift_i64(PH2, polynomial, H2);
-    prod_pol_mat_i128(S, PH2, sublattice_inv);
-    coeff_shift_i128(S, S, (H1 - H2));
-    prod_pol_mat_i64(SL, S, sublattice);
+    coeff_shift_i64(DEGREE, PH2, polynomial, H2);
+    prod_pol_mat_i128(DEGREE, S, PH2, sublattice_inv);
+    coeff_shift_i128(DEGREE, S, S, (H1 - H2));
+    prod_pol_mat_i64(DEGREE, SL, S, sublattice);
 
     for (int i = 0; i < DEGREE; i++)
         out[i] = polynomial[i] - SL[i];
 }
 # endif
 
+
+/*=================================================================
+                    MONTGOMERY REDUCTION FUNCTION 
+=================================================================*/
 # if IS_DOUBLE_SPARSE
 void reduction_montgomery_linear(int64_t out[DEGREE], __int128 polynomial[DEGREE]) {
     int64_t Q[DEGREE] = {0};
     __int128 T[DEGREE] = {0};
 
-    linear_prod_pol_lattice_inv_i64(Q, polynomial);
-    linear_prod_pol_lattice_i128(T, Q);
+    prod_pol_mat_linear_i64(Q, polynomial);
+    prod_pol_mat_linear_i128(T, Q);
 
     for (int deg = 0; deg < DEGREE; deg++)
         out[deg] = (T[deg] + polynomial[deg]) >> 64;
@@ -35,11 +41,11 @@ void reduction_montgomery_linear(int64_t out[DEGREE], __int128 polynomial[DEGREE
 # endif
 
 void reduction_montgomery_int128(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]) {
-    int64_t Q[DEGREE] = {0};
+    __int128 Q[DEGREE] = {0};
     __int128 T[DEGREE] = {0};
 
-    prod_pol_mat_i64(Q, polynomial, sublattice_inv);
-    prod_pol_mat_i128(T, Q, sublattice);
+    prod_pol_mat_i64(DEGREE, Q, polynomial, sublattice_inv);
+    prod_pol_mat_i128(DEGREE, T, Q, sublattice);
 
     for (int deg = 0; deg < DEGREE; deg++)
         out[deg] = (T[deg] + polynomial[deg]) >> 64;
@@ -170,11 +176,11 @@ void reduction_montgomery_mpz(mpz_t out[DEGREE], mpz_t polynomial[DEGREE], const
 
 # if IS_TOEPLITZ_USABLE
 void reduction_montgomery_toeplitz(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2*DEGREE - 1], const uint64_t sublattice_inv[2*DEGREE - 1]) {
-    int64_t Q[DEGREE] = {0};
+    __int128 Q[DEGREE] = {0};
     __int128 T[DEGREE] = {0};
 
-    prod_pol_mat_toeplitz_i64(Q, polynomial, sublattice_inv);
-    prod_pol_mat_toeplitz_i128(T, Q, sublattice);
+    prod_pol_mat_toeplitz_i64(DEGREE, Q, polynomial, sublattice_inv);
+    prod_pol_mat_toeplitz_i128(DEGREE, T, Q, sublattice);
 
     for (int deg = 0; deg < DEGREE; deg++)
         out[deg] = (T[deg] + polynomial[deg]) >> 64;

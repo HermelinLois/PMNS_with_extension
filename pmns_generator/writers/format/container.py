@@ -38,7 +38,7 @@ def _pad_coefficients(poly, n):
 
         return poly
 
-
+    
 class PMNSContainer:
     struct_generic = STRUCT_GENERIC
     struct_specific = STRUCT_SPECIFIC
@@ -64,6 +64,34 @@ class PMNSContainer:
         self.update_matrix_parameters()
         self.update_reduction_parameters()
         self.update_conversions_parameters()
+
+    def _get_reduction_parameters(self, theta_pow):
+        # without external reduction polynomial product is bounded by k * theta * (1/2 * L.norm(1))**2) or k * theta * 1/2 * L.norm(1) if 
+        # used structure is sparse with our implementation
+        # this is due to the fact that precomputed polynomial have coefficients bounded by (1/2 * L.norm(1))**2) following F. PALMA thesis
+        # by construction, we add at most a coefficient of size theta = 2**theta_pow
+        # k factor is comming from the polynomials addition (cf. montgomery_pseudo_fast_conversion)
+        # as we realise an external reduction to ensure a representation bounded by rho, w parameters appears in the bound
+        
+        L = self.params['L_origin']
+        pol_e = self.params['E']
+        phi = 2**self.params['phi_pow']
+        rho = self.params['rho']
+        k = self.params['k']
+        n = self.params['n']
+
+        w = search_memory_overhead(pol_e)
+            
+        factor = (1/2 * L.norm(1))**(1 if self.params['struct'] == PMNSContainer.struct_sparse else 2)
+        n_red_pseudo = compute_nb_internal_reductions(w * k * 2**theta_pow * factor , phi, rho, L)
+        n_red_fast = compute_nb_internal_reductions(k * 2**theta_pow * 1/2 * L.norm(1), phi, rho, L)
+        n_red_extact = compute_nb_internal_reductions((2*rho)**(n/k), phi, rho, L)
+
+        assert n_red_fast == 1, f"Program suppose n_red_fast == 1, got {n_red_fast}."
+        assert n_red_pseudo == 2, f"Program suppose n_red_pseudo == 2, got {n_red_pseudo}. Change function use in conversion to switch from mpn use to mpz use." 
+
+        return n_red_extact, n_red_pseudo, n_red_fast
+
         
 
     def update_matrix_parameters(self):
@@ -100,7 +128,6 @@ class PMNSContainer:
 
 
     def update_reduction_parameters(self):
-        struct = self.params['struct']
         E = self.params['E']
         phi_pow = self.params['phi_pow']
         
@@ -151,43 +178,25 @@ class PMNSContainer:
         if all(key in self.params for key in required_keys):
             return
 
-        struct = self.params['struct']
-        n, L = self.params['n'], self.params['L_origin']
+        n = self.params['n']
         p, k = self.params['p'], self.params['k']
-        phi_pow = self.params['phi_pow']
-        phi = 2**phi_pow
-        rho = self.params['rho']
         
         theta_pow = ceil(p.nbits() * k / n)
-        
-        n_red_extact = compute_nb_internal_reductions((2*rho)**(n/k), phi, rho, L)
-
-        # without external reduction polynomial product is bounded by k * theta * (1/2 * L.norm(1))**2) or k * theta * 1/2 * L.norm(1) if 
-        # used structure is sparse with our implementation
-        # this is due to the fact that precomputed polynomial have coefficients bounded by (1/2 * L.norm(1))**2) following F. PALMA thesis
-        # by construction, we add at most a coefficient of size theta = 2**theta_pow
-        # k factor is comming from the polynomials addition (cf. montgomery_pseudo_fast_conversion)
-        # as we realise an external reduction to ensure a representation bounded by rho, w parameters appears in the bound
-
-        w = search_memory_overhead(self.params['E'])
-        
-        factor = (1/2 * L.norm(1))**(1 if struct == self.struct_sparse else 2)
-        n_red_pseudo = compute_nb_internal_reductions(w * k * 2**theta_pow * factor , phi, rho, L)
-        n_red_fast = compute_nb_internal_reductions(k * 2**theta_pow * 1/2 * L.norm(1), phi, rho, L)
-
-        assert n_red_fast == 1, "Current implementation of fast conversion only support 1 internal reduction, if more are needed, the conversion should be adapted to support them."
-        
         n_pols = ceil(n/k)
+
+        n_red_exact, n_red_pseudo, n_red_fast = self._get_reduction_parameters(theta_pow)
+
         self.params[tpow] = theta_pow     
         self.params[nb_pols] = n_pols
-        
-        self.params[nb_exact] = n_red_extact
+        self.params[nb_exact] = n_red_exact
         self.params[nb_pseudo] = n_red_pseudo
         self.params[nb_fast] = n_red_fast
         
         self.params[fpols] = _pad_coefficients(compute_conversion_tables(self, theta_pow, 1, n_pols, over_field=True), n)
+
         i_pols_full = _pad_coefficients(compute_conversion_tables(self, theta_pow, n_red_pseudo, n_pols, over_field=False), n)
         self.params[ipols] = i_pols_full[0]
+
         z_pols_full = _pad_coefficients(compute_conversion_tables(self, 0, 0, k, over_field=True), n)
         self.params[zpols] = [z_pols_full[i][0] for i in range(len(z_pols_full))]
 

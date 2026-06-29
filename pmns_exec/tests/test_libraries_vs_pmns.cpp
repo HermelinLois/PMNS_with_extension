@@ -13,7 +13,7 @@ void rand_field_element(mp_limb_t a[EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t 
 
 void convert_element_to_pmns_fast(int64_t out[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]);
 
-void polynomials_product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t PolB[DEGREE]);
+void polynomials_product(int degree, __int128 out[], const int64_t PolA[], const int64_t PolB[]);
 
 void reduction_montgomery_int128(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]);
 
@@ -49,29 +49,29 @@ static inline void pmns_format(int64_t poly_res[DEGREE], mp_limb_t a[EXTENSION_D
 }
 
 static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
-    __int128_t tmp[DEGREE];
-    polynomials_product(tmp, poly_a, poly_b);
+    __int128_t tmp[2 * DEGREE - 1];
+    polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_int128(poly_res, tmp, L, L_INV);
 }
 
 #if IS_TOEPLITZ_USABLE
 static inline void pmns_toeplitz_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
-    __int128_t tmp[DEGREE];
-    polynomials_product(tmp, poly_a, poly_b);
+    __int128_t tmp[2 * DEGREE - 1];
+    polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_toeplitz(poly_res, tmp, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
 }
 
 static inline void pmns_toeplitz_recursive_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
-    __int128_t tmp[DEGREE];
-    polynomials_product(tmp, poly_a, poly_b);
+    __int128_t tmp[2 * DEGREE - 1];
+    polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_toeplitz_recursive(poly_res, tmp, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
 }
 #endif
 
 #if IS_DOUBLE_SPARSE
 static inline void pmns_linear_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
-    __int128_t tmp[DEGREE];
-    polynomials_product(tmp, poly_a, poly_b);
+    __int128_t tmp[2 * DEGREE - 1];
+    polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_linear(poly_res, tmp);
 }
 #endif

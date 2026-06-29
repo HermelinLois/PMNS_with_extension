@@ -41,7 +41,7 @@ void convert_element_to_pmns_fast(int64_t out[DEGREE], const mp_limb_t element_d
 
         for (int i=0; i<N_POL; i++){
             uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
-            addmul_pol64_int64(polynomial, PMNS_THETA_FAST[deg][i], part);
+            addmul_pol64_int64(DEGREE, polynomial, PMNS_THETA_FAST[deg][i], part);
         }
     }
     
@@ -66,13 +66,13 @@ void convert_element_to_pmns_pseudo_fast(int64_t out[DEGREE], const mp_limb_t el
 
         for (int i=0; i<N_POL; i++){
             uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
-            addmul_pol64_int64_mpn(POL_LIMBS, partial_polynomial, PMNS_THETA_PSEUDO_FAST[i], part);
+            addmul_pol64_int64_mpn(DEGREE, POL_LIMBS, partial_polynomial, PMNS_THETA_PSEUDO_FAST[i], part);
         }
 
     # if IS_ELEMENTS_IN_GAMMA_BASIS
-        addmul_polmpn_Xpow_modE(POL_LIMBS, vector, partial_polynomial, deg);
+        addmul_polmpn_Xpow_modE(DEGREE, POL_LIMBS, vector, partial_polynomial, deg);
     # else
-        addmul_polmpn_pol64(POL_LIMBS, vector, partial_polynomial, PMNS_FIELD_ROOTS[deg]);
+        addmul_polmpn_pol64(DEGREE, POL_LIMBS, vector, partial_polynomial, PMNS_FIELD_ROOTS[deg]);
     # endif
     }
 
@@ -91,7 +91,7 @@ void convert_element_to_pmns_vector(int64_t out[EXTENSION_DEGREE][DEGREE], const
 
         for (int i=0; i<N_POL; i++){
             uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
-            addmul_pol64_int64(polynomial, PMNS_THETA_FAST[deg][i], part);
+            addmul_pol64_int64(DEGREE, polynomial, PMNS_THETA_FAST[deg][i], part);
         }
         reduction_montgomery_int128(out[deg], polynomial, L, L_INV);
     }

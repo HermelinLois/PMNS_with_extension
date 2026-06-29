@@ -18,7 +18,7 @@ void test_equality(){
 
     for (int idx=0; idx<N_TESTS; idx++){
         for (int i=0; i<DEGREE; i++) out[i] = 0;
-        polynomials_product(polynomial, POL_A[idx], POL_B[idx]);
+        polynomials_product(DEGREE, polynomial, POL_A[idx], POL_B[idx]);
 
         reduction_montgomery_int128(out, polynomial, L, L_INV);
         check_equality(out, MONTGOMERY_PROD_RED[idx], "Montgomery");
