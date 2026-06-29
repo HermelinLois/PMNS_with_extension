@@ -41,6 +41,14 @@ void addmul_polmpn_Xpow_modE(int degree, int n_limbs, mp_limb_t out[degree][n_li
 /*=================================================================
         FUNCTIONS FOR PRODUCTS WITH POLYNOMIALS AND MATRICES 
 =================================================================*/
+void prod_polmpn_mat_i64(int degree, int n_limbs, int64_t out[degree], mp_limb_t pol[degree][n_limbs], const int64_t sublattice[degree][degree]);
+
+void prod_pol_mat_mpn(int degree, int n_limbs, mp_limb_t out[degree][n_limbs+1], int64_t pol[degree], const int64_t sublattice[degree][degree]);
+
+void prod_pol_mat_mpz(int degree, mpz_t out[degree], int64_t pol[degree], const int64_t sublattice[degree][degree]);
+
+void prod_polmpz_mat_i64(int degree, int64_t out[degree], mpz_t pol[degree], const int64_t sublattice[degree][degree], mpz_t phi);
+
 void prod_pol_mat_i64(int degree, __int128 out[degree], __int128 polynomial[degree], const int64_t matrix[degree][degree]);
 
 void prod_pol_mat_i128(int degree, __int128 out[degree], __int128 polynomial[degree], const int64_t matrix[degree][degree]);
@@ -55,11 +63,9 @@ void prod_pol_mat_toeplitz_recursive_i64(int degree, __int128 out[degree], const
 void prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], const __int128 vector[degree], const int64_t toeplitz_matrix[2*degree - 1]);
 # endif
 
-
 #if IS_DOUBLE_SPARSE
 void prod_pol_mat_linear_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE]);
 
 void prod_pol_mat_linear_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE]);
 #endif
-
 #endif

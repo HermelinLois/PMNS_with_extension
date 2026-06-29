@@ -31,27 +31,27 @@ void rand_field_element(mp_limb_t out[EXTENSION_DEGREE][N_LIMBS], gmp_randstate_
 }
 
 
-void print_pol(int64_t *P){
-    for (int idx=0; idx<DEGREE; idx++)
+void print_pol(int degree, int64_t P[degree]){
+    for (int idx=0; idx<degree; idx++)
         printf("%lld  ", (long long)P[idx]);
     printf("\n");
 }
 
 
-void check_equality(int64_t P[DEGREE], int64_t C[DEGREE], const char* method){
-    for (int i=0; i<DEGREE; i++){
+void check_equality(int degree, int64_t P[degree], int64_t C[degree], const char* method){
+    for (int i=0; i<degree; i++){
         if(C[i] != P[i]) {
             printf("/!\\ Error has been found /!\\ \n");
             printf("Generate with Python :\n");
-            print_pol(C);
+            print_pol(degree, C);
             printf("Generate with C (with %s) :\n", method);
-            print_pol(P);
+            print_pol(degree, P);
             exit(1);
         }
     }
 }
 
-void reset_polynomial(int64_t polynomial[DEGREE]){
-    for (int i=0; i<DEGREE; i++) 
+void reset_polynomial(int degree, int64_t polynomial[degree]){
+    for (int i=0; i<degree; i++) 
         polynomial[i]=0;
 }

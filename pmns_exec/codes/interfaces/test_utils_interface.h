@@ -8,12 +8,10 @@
 
 void rand_field_element(mp_limb_t out[EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state);
 
-void gen_random_pmns(int64_t out[DEGREE]);
+void print_pol(int degree, int64_t P[degree]);
 
-void print_pol(int64_t *P);
+void check_equality(int degree, int64_t P[degree], int64_t C[degree], const char* method);
 
-void check_equality(int64_t P[DEGREE], int64_t C[DEGREE], const char* method);
-
-void reset_polynomial(int64_t polynomial[DEGREE]);
+void reset_polynomial(int degree, int64_t polynomial[degree]);
 
 #endif

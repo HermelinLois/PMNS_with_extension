@@ -211,6 +211,112 @@ void addmul_polmpn_Xpow_modE(int degree, int n_limbs, mp_limb_t out[degree][n_li
 /*=================================================================
         FUNCTIONS FOR PRODUCTS WITH POLYNOMIALS AND MATRICES 
 =================================================================*/
+void prod_polmpn_mat_i64(int degree, int n_limbs, int64_t out[degree], mp_limb_t pol[degree][n_limbs], const int64_t sublattice[degree][degree]) {
+    int SIZE = n_limbs + 1;
+    mp_limb_t acc[SIZE];
+    mp_limb_t prod[SIZE];
+
+    for (int j = 0; j < DEGREE; j++) {
+        mpn_zero(acc, SIZE);
+
+        for (int i = 0; i < DEGREE; i++) {
+            int64_t mat_coeff = sublattice[i][j];
+            if (mat_coeff == 0) continue;
+
+            int mat_sign = (mat_coeff < 0);
+            uint64_t abs_c = mat_sign ? (uint64_t)(-mat_coeff) : (uint64_t)mat_coeff;
+            int pol_sign = (pol[i][n_limbs - 1] >> (GMP_NUMB_BITS - 1)) & 1;
+            
+            mp_limb_t tmp_pol[n_limbs];
+            if (pol_sign){
+                mpn_com(tmp_pol, pol[i], n_limbs);
+                mpn_add_1(tmp_pol, tmp_pol, n_limbs, 1);
+            } else {
+                mpn_copyi(tmp_pol, pol[i], n_limbs);
+            }
+
+            prod[n_limbs] = mpn_mul_1(prod, tmp_pol, n_limbs, abs_c);
+            (mat_sign ^ pol_sign ? mpn_sub_n : mpn_add_n)(acc, acc, prod, SIZE);
+        }
+        out[j] = (int64_t)acc[0];
+    }
+
+}
+
+
+void prod_pol_mat_mpn(int degree, int n_limbs, mp_limb_t out[degree][n_limbs+1], int64_t pol[degree], const int64_t sublattice[degree][degree]){
+    int SIZE = n_limbs + 1;
+    for (int j = 0; j < degree; j++) {
+        mpn_zero(out[j], SIZE);
+
+        for (int i = 0; i < degree; i++) {
+            int64_t mat_coeff = sublattice[i][j];
+            int64_t pol_coeff = pol[i];
+            if (mat_coeff == 0 || pol_coeff == 0) continue;
+            
+            int mat_sign = (mat_coeff < 0);
+            int pol_sign   = (pol_coeff < 0);
+            uint64_t mat_abs = mat_sign ? -(uint64_t)mat_coeff : (uint64_t)mat_coeff;
+            uint64_t pol_abs   = pol_sign   ? (uint64_t)(-pol_coeff) : (uint64_t)pol_coeff;
+
+            mp_limb_t mat_limb = (mp_limb_t)mat_abs;
+            mp_limb_t pol_limb   = (mp_limb_t)pol_abs;
+
+            mp_limb_t prod_limbs[SIZE];
+            mpn_zero(prod_limbs, SIZE);
+
+            prod_limbs[1] = mpn_mul_1(prod_limbs, &pol_limb, 1, mat_limb);
+
+            int sign_prod = mat_sign ^ pol_sign;
+            (sign_prod ? mpn_sub_n : mpn_add_n)(out[j], out[j], prod_limbs, SIZE);
+        }
+    }
+}
+
+
+void prod_pol_mat_mpz(int degree, mpz_t out[degree], int64_t pol[degree], const int64_t sublattice[degree][degree]) {
+    mpz_t tmp;
+    mpz_init(tmp);
+
+    for (int j = 0; j < degree; j++) {
+        mpz_init_set_ui(out[j], 0);
+
+        for (int i = 0; i < degree; i++) {
+            int64_t mat_coeff = sublattice[i][j];
+            int64_t pol_coeff = pol[i];
+            if (mat_coeff == 0 || pol_coeff == 0) continue;
+            
+            __int128 prod = (__int128)mat_coeff * (__int128)pol_coeff;
+            unsigned __int128 abs_prod = prod < 0 ? -prod : prod;
+
+            mpz_import(tmp, 2, -1, sizeof(uint64_t), 0, 0, &abs_prod);
+            if (prod < 0) mpz_neg(tmp, tmp);
+            mpz_add(out[j], out[j], tmp);
+        }
+    }
+
+    mpz_clear(tmp);
+}
+
+
+void prod_polmpz_mat_i64(int degree, int64_t out[degree], mpz_t pol[degree], const int64_t sublattice[degree][degree], mpz_t phi) {
+    mpz_t tmp, acc;
+    mpz_inits(tmp, acc, NULL);
+
+     for (int j = 0; j < DEGREE; j++) {
+        mpz_set_ui(acc, 0);
+
+        for (int i = 0; i < DEGREE; i++) {
+            mpz_mul_ui(tmp, pol[i], sublattice[i][j]);
+            mpz_add(acc, acc, tmp);
+        }
+        mpz_mod(acc, acc, phi);
+        out[j] = mpz_get_ui(acc);
+    }
+    mpz_clears(tmp, acc, NULL);
+}
+
+
 #define PROD_POL_MAT_CORE(RETURN_TYPE, DEGREE, OUT, POLYNOMIAL, MATRIX){    \
     for (int i = 0; i < DEGREE; i++) {                                      \
         RETURN_TYPE acc = 0;                                                \
@@ -253,7 +359,8 @@ void prod_pol_mat_toeplitz_i128(int degree, __int128 out[degree], const __int128
     PROD_POL_MAT_TOEPLITZ_CORE(__int128, degree, out, polynomial, matrix_toeplitz);
 }
 
-
+// for recursion purposes, we need to define a core function that can be used recursively for the Karatsuba-like approach and set that all function work with __int128 as the return type, 
+// since we will be working with polynomials of degree n/2 and the result will be of degree n-1, which can be represented by __int128. The recursive function will be called recursively until the degree is less than a certain threshold, at which point we will use the standard product function.
 #define PROD_POL_MAT_TOEPLITZ_RECURSIVE_CORE(RECURSIVE_FUNC, PRODUCT_FUNC, RETURN_TYPE, MAT_TYPE, DEGREE, OUT, POLYNOMIAL, TOEPLITZ_MATRIX) \
     if ((DEGREE) < TOEPLITZ_THRESHOLD || (((DEGREE) % 3 != 0) && (((DEGREE) & 1) == 1))) {                \
         PRODUCT_FUNC(DEGREE, OUT, POLYNOMIAL, TOEPLITZ_MATRIX);          \
@@ -307,7 +414,7 @@ void prod_pol_mat_toeplitz_i128(int degree, __int128 out[degree], const __int128
         return;                                                           \
     }                                                                     \
                                                                           \
-    else {                                                                \
+    else if ((DEGREE & 1) == 0) {                                                                \
         int m = (DEGREE) / 2;                                             \
                                                                           \
         const __int128 *v0 = POLYNOMIAL;                                  \
@@ -401,6 +508,3 @@ void prod_pol_mat_linear_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE]){
     }
 }
 #endif
-
-
-

@@ -18,17 +18,17 @@ void test_equality(){
     int64_t polynomial[DEGREE];
 
     for (int idx=0; idx<N_TESTS; idx++){
-        reset_polynomial(polynomial);
+        reset_polynomial(DEGREE, polynomial);
         convert_element_to_pmns_exact(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
-        check_equality(CONVERTED_ELEMENTS_EXACT[idx], polynomial, "exact");
+        check_equality(DEGREE, CONVERTED_ELEMENTS_EXACT[idx], polynomial, "exact");
 
-        reset_polynomial(polynomial);
+        reset_polynomial(DEGREE, polynomial);
         convert_element_to_pmns_pseudo_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
-        check_equality(CONVERTED_ELEMENTS_PSEUDO_FAST[idx], polynomial, "pseudo-fast");
+        check_equality(DEGREE, CONVERTED_ELEMENTS_PSEUDO_FAST[idx], polynomial, "pseudo-fast");
 
-        reset_polynomial(polynomial);
+        reset_polynomial(DEGREE, polynomial);
         convert_element_to_pmns_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
-        check_equality(CONVERTED_ELEMENTS_FAST[idx], polynomial, "fast");
+        check_equality(DEGREE, CONVERTED_ELEMENTS_FAST[idx], polynomial, "fast");
     }
     printf("Conversions seems to work with given parameters\n");
 }
@@ -56,7 +56,7 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
 		memset(cycles,0,N_BENCH_TESTS*sizeof(uint64_t));
 
 		for(int j=0;j<N_BENCH_TESTS;j++){
-            reset_polynomial(polynomial);
+            reset_polynomial(DEGREE, polynomial);
 
 			t1 = cpucyclesStart();
 			to_pmns(polynomial, element_data);
