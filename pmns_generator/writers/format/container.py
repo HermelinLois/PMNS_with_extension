@@ -85,7 +85,7 @@ class PMNSContainer:
         n_red_extact = compute_nb_internal_reductions((2*rho)**(n/k), phi, rho, L)
 
         assert n_red_fast == 1, f"Program suppose n_red_fast == 1, got {n_red_fast}."
-        assert n_red_pseudo == 2, f"Program suppose n_red_pseudo == 2, got {n_red_pseudo}. Change function use in conversion to switch from mpn use to mpz use." 
+        assert n_red_pseudo <= 2, f"Program suppose n_red_pseudo <= 2, got {n_red_pseudo}. Change function use in conversion to switch from mpn use to mpz use." 
 
         return n_red_extact, n_red_pseudo, n_red_fast
 
