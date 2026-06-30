@@ -154,7 +154,12 @@ class PMNSContainer:
             L = self.params['L_origin']
             rho = self.params['rho']
 
-            h1, h2, L_inv_babai = gen_params_for_babai(L, phi_pow, rho, E)
+            result = gen_params_for_babai(L, phi_pow, rho, E)
+            if result is None:
+                self.params['is_babai_usable'] = False
+                return
+            
+            h1, h2, L_inv_babai = result
             self.params['h1'] = h1
             self.params['h2'] = h2
             self.params['L_inv_babai'] = _ensure_list(L_inv_babai)
