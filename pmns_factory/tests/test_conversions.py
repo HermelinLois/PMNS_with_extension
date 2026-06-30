@@ -8,7 +8,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 from pmns_factory.core.operations.convertions_gestion import montgomery_exact_conversion, montgomery_pseudo_fast_conversion, montgomery_fast_conversion
-from pmns_generator.writers.format.container import PMNSContainer
+from pmns_generator.writers.format.PMNS_interface import PMNSContainer
 import pmns_factory.pmns_E_type0_generic as type0
 
 PR = PolynomialRing(ZZ,"X")

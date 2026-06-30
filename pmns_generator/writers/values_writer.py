@@ -14,7 +14,7 @@ from config import VALUES_OUTPUT_DIR, VALUES_TEMPLATES_DIR, STRUCT_SPARSE
 from pmns_factory.core.operations.convertions_gestion import montgomery_fast_conversion, montgomery_exact_conversion, montgomery_pseudo_fast_conversion
 from pmns_factory.core.operations.reductions.babai_reduction import babai_rounding_limited_reduction
 from pmns_factory.core.operations.reductions.montgomery_reduction import fast_montgomery_reduction
-from pmns_generator.writers.format.container import PMNSContainer
+from pmns_generator.writers.format.PMNS_interface import PMNSContainer
 from pmns_generator.writers.format import format_element as format
 
 def write_conversions_values(env, n_test:int, container:PMNSContainer) -> list: 

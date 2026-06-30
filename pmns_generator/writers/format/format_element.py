@@ -1,3 +1,4 @@
+from sage.all import Integer, Rational
 
 def format_to_int64(x:int) -> str:
     suffix = 'LL' if x < 0 else 'ULL'
@@ -57,3 +58,37 @@ def format_tensor_to_int64(t, space=" " * 4):
         lines.append(formatted_mat)
 
     return "{\n" + ",\n".join(lines) + "\n}"
+
+def _ensure_list(obj):
+    """Convert element into a list if it has a 'rows' attribute (e.g., SageMath matrices)."""
+    if hasattr(obj, 'rows'):
+        return [list(row) for row in obj.rows()]
+    return obj
+
+
+def _pad_coefficients(poly, n: int):
+    """Fill the coefficients of an object to length n with zeros."""
+    if hasattr(poly, 'list'):
+        poly = list(poly)
+    if isinstance(poly, list) and len(poly) > 0 and isinstance(poly[0], list):
+        return [_pad_coefficients(item, n) for item in poly]
+    if isinstance(poly, list):
+        return poly + [0] * (n - len(poly))
+    return poly
+
+
+def _get_dimension(val) -> int:
+    """
+    Recursively determine the dimension of a nested structure (list, matrix, etc.).
+    Args:
+        val (Any): The value whose dimension is to be determined.
+    Returns:
+        int: The dimension of the structure.
+    """
+    atomic_types = (int, float, Integer, Rational, str)
+    
+    # If the value is an atomic type or does not have a __getitem__ attribute, return 0 (base case).
+    if isinstance(val, atomic_types) or not hasattr(val, '__getitem__'):
+        return 0
+        
+    return 1 + _get_dimension(val[0])

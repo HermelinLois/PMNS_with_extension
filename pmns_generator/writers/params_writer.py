@@ -1,4 +1,4 @@
-from pmns_generator.writers.format.container import PMNSContainer
+from pmns_generator.writers.format.PMNS_interface import PMNSContainer
 from jinja2 import Environment, FileSystemLoader
 from config import PARAMS_OUTPUT_DIR, PARAMS_TEMPLATES_DIR
 

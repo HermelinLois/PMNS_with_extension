@@ -18,6 +18,6 @@ static const int64_t PMNS_THETA_FAST[EXTENSION_DEGREE][N_POL][DEGREE] = {{ conta
 // pre-compute gamma_base[i] = gamma**i where gamma is the base of the PMNS representation
 static const mp_limb_t GAMMA_POW[DEGREE][EXTENSION_DEGREE][N_LIMBS] = {{ container.get('gamma_pows', True) }};
 
-{% if not container.get('is_elements_in_gamma_basis') %}
+{% if not container.data.is_elements_in_gamma_basis %}
 static const mp_limb_t TRANSITION_MATRIX[EXTENSION_DEGREE][EXTENSION_DEGREE][N_LIMBS] = {{ container.get('T_mat', True) }};
 {% endif %}

@@ -1,6 +1,5 @@
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
-from writers.format.container import PMNSContainer
 import argparse
 import sys
 
@@ -11,6 +10,7 @@ ROOT_PATH = str(ROOT_DIR)
 if ROOT_PATH not in sys.path:
     sys.path.append(ROOT_PATH)
 
+from pmns_generator.writers.format.PMNS_interface import PMNSBuilder, PMNSContainer
 from writers import params_writer, values_writer
 from config import OUTPUT_DIR, TEMPLATES_DIR, PMNS_CONFIG, STRUCT_GENERIC, STRUCT_SPARSE, STRUCT_SPECIFIC, PARAMS_TEMPLATES_DIR
 
@@ -42,8 +42,8 @@ def get_container(args):
     pmns_gen = PMNS_CONFIG[args.Etype][args.struct]
     pmns_params = pmns_gen.gen_parameters(args.nbits, args.k, n=args.n)
 
-    container = PMNSContainer(args.Etype, pmns_params, structure=args.struct)
-    return container, False
+    builder = PMNSBuilder(args.Etype, pmns_params, structure=args.struct)
+    return builder.build(), False
 
 
 ACTION_CONSTRUCT = "construct"
