@@ -79,6 +79,7 @@ help:
 	@printf "  make show-config      - Display current configuration\n"
 	@printf "  make help             - Display this help message\n"
 	@printf "  make new-tests        - Generate new tests values\n"
+	@printf "  make recompile        - Recompile tests without regenerating PMNS\n"
 	@printf "\nConfigurable variables:\n"
 	@printf "  NBITS      - Prime bit size (default: $(NBITS))\n"
 	@printf "  K          - Extension degree (default: $(K))\n"
@@ -95,6 +96,7 @@ help:
 	@printf "  make ETYPE=0 STRUCT=sparse          # Use sparse structure for E_TYPE0\n"
 	@printf "  make NTESTS=0 OPT='-O2'             # Generate 0 tests values and compile with custom options\n"
 	@printf "  make clean && make                  # Clean and rebuild\n"
+	@printf "  make recompile                      # Recompile tests without regenerating PMNS\n"
 	@printf "  make new-tests NTESTS=100           # Generate 100 new tests values for current PMNS\n\n"
 
 
@@ -133,8 +135,6 @@ $(TARGET_TEST_libs): $(SRC_conv) $(SRC_red) $(SRC_ops) $(SRC_utils) $(TEST_DIR)/
 	@$(CCplusplus) $(CplusplusFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) -I$(PARAMS_DIR) $(TEST_DIR)/test_libraries_vs_pmns.cpp $(TMP_DIR)/*.o $(LDFLAGS) -o $(TARGET_TEST_libs)
 	@rm -rf $(TMP_DIR)
 
-
-
 generate: show-config $(C_GEN)
 	@$(MAKE) clean --no-print-directory
 	@$(PyI) $(C_GEN) -ntests $(NTESTS) -nbits $(NBITS) -k $(K) -Etype $(ETYPE) $(NOPT_FLAG) --struct $(STRUCT) $(LOAD_FLAG)
@@ -151,10 +151,12 @@ check-state:
 new-tests: check-state
 	@rm -f $(TARGET_TEST_red) $(TARGET_TEST_conv)
 	@$(PyI) $(C_GEN) -ntests $(NTESTS) -nbits $(PMNS_LAST_NBITS) -k $(PMNS_LAST_K) -Etype $(PMNS_LAST_ETYPE) --struct $(PMNS_LAST_STRUCT) --load --action new_values
-	@# NOTE: assumes PMNS params and generated headers exist (run 'make generate' first)
 	@$(CC) $(CFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) $(TEST_SRC_red) $(SRC_red) $(SRC_conv) $(SRC_ops) $(SRC_utils) $(LDFLAGS) -o $(TARGET_TEST_red)
 	@$(CC) $(CFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) $(TEST_SRC_conv) $(SRC_conv) $(SRC_red) $(SRC_ops) $(SRC_utils) $(LDFLAGS) -o $(TARGET_TEST_conv)
 
+recompile:
+	@rm -f $(TARGET_TEST_red) $(TARGET_TEST_conv) $(TARGET_TEST_libs)
+	@$(MAKE) $(TARGET_TEST_red) $(TARGET_TEST_conv) $(TARGET_TEST_libs) -o generate --no-print-directory
 
 $(SRC_red) $(SRC_conv): generate
 
@@ -163,4 +165,4 @@ clean:
 	@rm -rf $(GENERATED_FILES) $(TMP_DIR)
 	@rm -f $(TARGET_TEST_red) $(TARGET_TEST_conv) $(TARGET_TEST_libs)
 
-.PHONY: generate help show-config
+.PHONY: generate help show-config recompile clean new-tests check-state

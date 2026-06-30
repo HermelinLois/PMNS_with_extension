@@ -360,7 +360,8 @@ void prod_pol_mat_toeplitz_i128(int degree, __int128 out[degree], const __int128
 }
 
 // for recursion purposes, we need to define a core function that can be used recursively for the Karatsuba-like approach and set that all function work with __int128 as the return type, 
-// since we will be working with polynomials of degree n/2 and the result will be of degree n-1, which can be represented by __int128. The recursive function will be called recursively until the degree is less than a certain threshold, at which point we will use the standard product function.
+// since we will be working with polynomials of degree n/2 and the result will be of degree n-1, which can be represented by __int128. The recursive function will be called recursively until the degree 
+// is less than a certain threshold, at which point we will use the standard product function.
 #define PROD_POL_MAT_TOEPLITZ_RECURSIVE_CORE(RECURSIVE_FUNC, PRODUCT_FUNC, RETURN_TYPE, MAT_TYPE, DEGREE, OUT, POLYNOMIAL, TOEPLITZ_MATRIX) \
     if ((DEGREE) < TOEPLITZ_THRESHOLD || (((DEGREE) % 3 != 0) && (((DEGREE) & 1) == 1))) {                \
         PRODUCT_FUNC(DEGREE, OUT, POLYNOMIAL, TOEPLITZ_MATRIX);          \
@@ -509,3 +510,7 @@ void prod_pol_mat_linear_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE]){
 }
 #endif
 
+
+/*=================================================================
+            FUNCTIONS FOR PRODUCTS BETWEEN PMNS VECTORS
+=================================================================*/
