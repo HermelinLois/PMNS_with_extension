@@ -8,24 +8,17 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 from pmns_factory.core.operations.convertions_gestion import montgomery_exact_conversion, montgomery_pseudo_fast_conversion, montgomery_fast_conversion
-from pmns_generator.writers.format.PMNS_interface import PMNSContainer
+from pmns_generator.writers.format.PMNS_interface import PMNSBuilder
 import pmns_factory.pmns_E_type0_generic as type0
 
-PR = PolynomialRing(ZZ,"X")
-X = PR.gen()
-
 m = 128
-p = random_prime(2**m, lbound=2**(m-1))
 k = 2
-pmns = type0.gen_parameters(p, k)
-
-
-container = PMNSContainer(None, pmns)
-container.add_conversions_parameters()
+pmns = type0.gen_parameters(m, k)
+builder = PMNSBuilder(0, pmns, structure="generic")
+container = builder.build() 
 
 gamma = container.get('gamma')
 K = gamma.parent()
-
 element = K.random_element()
 
 exact_time_start = time()

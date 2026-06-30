@@ -1,7 +1,6 @@
 from sage.all import random_prime
 import multiprocessing
-from concurrent.futures import ProcessPoolExecutor
-import signal
+from concurrent.futures import ProcessPoolExecutor, TimeoutError
 import sys
 from pathlib import Path
 
@@ -13,7 +12,6 @@ import pmns_factory.pmns_E_type0_generic as type0
 import pmns_factory.pmns_E_type1_generic as type1
 import pmns_factory.pmns_E_type0_specific as specific_type0
 import pmns_factory.pmns_E_type0_sparse as sparse_type0
-
 
 GOOD = 'GOOD'
 BAD = 'BAD'
@@ -40,20 +38,6 @@ TYPES = [type0, type1, specific_type0, sparse_type0]
 
 
 def write_summarize_data(writer, k:int, results:list, timeout:int, ntest:int, range_test:list):
-    """
-    compute average data of pmns generation for each prime size and write them in a text file
-    
-    Args:
-        writer: object used to write in a file
-        k(int): extension degree
-        results(list): list of pmns parameters
-        timeout(int): seconds for maximum limit computation of a pmns
-        ntest(int): number of test for each prime size
-        range_test(list): list of bit size used for testing
-    Return:
-        void: write summarized data in result_generation text file
-    """
-    
     n = len(CATEGORIES)
     datas_register = {
         TYPE0: [[0]*n for _ in range(len(range_test))],
@@ -62,11 +46,10 @@ def write_summarize_data(writer, k:int, results:list, timeout:int, ntest:int, ra
         SPARSE_TYPE0: [[0]*n for _ in range(len(range_test))]
     }
 
-    # write specific data in registers
     for result in results:
         key = result['type'].split('.')[-1]
         data = datas_register[key]
-        bit_size = result['p'].nbits()
+        bit_size = result['bits']
         idx = range_test.index(bit_size)
         
         data[idx][STATUS] += 1 if result['status'] == GOOD else 0
@@ -76,7 +59,6 @@ def write_summarize_data(writer, k:int, results:list, timeout:int, ntest:int, ra
         data[idx][ERROR_UNKNOW] += 1 if result.get('error', -1) == ERROR_FROM_UNKNOW else 0
         data[idx][ROUND] += result.get('it', 0)
     
-    #write file
     writer.write(f"# WITH TIMEOUT = {timeout} AND K = {k}\n")
 
     header = (
@@ -95,7 +77,6 @@ def write_summarize_data(writer, k:int, results:list, timeout:int, ntest:int, ra
     writer.write(header)
     writer.write(edge_line)
     
-    # fromat to txt parameters
     avg = lambda data, idx: float(data[idx]) / data[STATUS] if data[STATUS] else .0
     gen_text = lambda name, size, data: (
         f"|{size:^{WRITE_SPACE}}|"
@@ -108,111 +89,70 @@ def write_summarize_data(writer, k:int, results:list, timeout:int, ntest:int, ra
     
     for idx in range(len(range_test)):
         bit_size = range_test[idx]
-        
         for Etype in datas_register.keys():
             result = datas_register[Etype][idx]
             writer.write(gen_text(Etype, bit_size, result))
-    
         writer.write(break_line)
+
+
+def run_single_generation(args: tuple) -> dict:
+    """
+    Run a single PMNS generation task using the prime bit size.
+    """
+    bit_size, k, pmns_module = args
+    response = {"bits": bit_size, "type": pmns_module.__name__}
     
-
-def alarm_handler(null1, null2):
-    """
-    Alarm function to raise time error during test generation
-    """
-    raise TimeoutError("generation timeout")
-
-
-def run_single_generation(args:list)-> dict:
-    """
-    Run a test generation
-    
-    Args:
-        p(int): prime used
-        k(int): extension field used
-        pmns_module(class): class type used to generate pmns parameters
-        timeout(int): maximum time execution for generation
+    try:        
+        pmns = pmns_module.gen_parameters(bit_size, k)
         
-    Return:
-        dict: register pmns data generation
-    """
-    p, k, pmns_module, timeout = args
-    response = {"p": p, "type": pmns_module.__name__}
-    
-    signal.signal(signal.SIGALRM, alarm_handler)
-    signal.alarm(timeout)
-    # try to generate parameters
-    # generation is canceled if execution time is exceeded
-    try:
-        pmns = pmns_module.gen_parameters(p, k)
         response.update({        
-                "status": GOOD,  
-                "norm" : sum(abs(c) for c in pmns['E'].list()), 
-                "it": pmns['it'], 
-                })
-    except TimeoutError:
-        response.update({"status": BAD, "error": ERROR_FROM_TIME})
-
-    # catch assertion error coming from code
+            "status": GOOD,  
+            "norm" : sum(abs(c) for c in pmns['E'].list()), 
+            "it": pmns['it'], 
+        })
     except AssertionError: 
         response.update({"status": BAD, "error": ERROR_FROM_CODE})
-
-    # catch general exception
     except Exception:
         response.update({"status": BAD, "error": ERROR_FROM_UNKNOW})
         
-    finally:
-        signal.alarm(0)
-    
     return response
 
 
-def gen_prime(size:int):
-    """
-    gen random prime of a chosen bit size
-    """
-    return random_prime(2**size, lbound=2**(size-1))
-
-
-def run_test(k:int, ntest:int, timeout:int, range_test:list):
-    """
-    execute pmns generation for given sizes and extension degree
-    
-    Args:
-        k(int): extension degree used for pmns generation
-        ntest(int): number of test run for every size of prime given
-        timeout(int): maximum seconds used for pmns parameters generation
-    Return:
-        void: write data about pmns generation
-    """
-    # primes generation 
-    primes_slots = []
-    for size in range_test:
-        primes_slots.extend([size] * ntest)
-
-    primes = []
-    with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-        primes = list(executor.map(gen_prime, primes_slots))    
-    
-    # generate parameters for pmns geenration
+def run_test(k: int, ntest: int, timeout: int, range_test: list):
+    # task generation
     tasks = []
-    for p in primes:
-        for Etype in TYPES:
-            tasks.append((p, k, Etype, timeout))
+    for size in range_test:
+        for _ in range(ntest):
+            for Etype in TYPES:
+                tasks.append((size, k, Etype))
     
-    # generate result
     results = []
-    with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-        results = list(executor.map(run_single_generation, tasks))
+    workers = multiprocessing.cpu_count()
     
-    # write data in text file
-    with open(f"result_generation.txt", "a") as f:
+    # task execution with timeout handling
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(run_single_generation, task): task for task in tasks}
+        
+        for future in futures:
+            task = futures[future]
+            bit_size, _, pmns_module = task
+            try:
+                res = future.result(timeout=timeout)
+                results.append(res)
+
+            except TimeoutError:
+                results.append({"bits": bit_size, "type": pmns_module.__name__, "status": BAD, "error": ERROR_FROM_TIME})
+
+            except Exception:
+                results.append({"bits": bit_size, "type": pmns_module.__name__, "status": BAD, "error": ERROR_FROM_UNKNOW})
+    
+    with open("result_generation.txt", "a") as f:
         write_summarize_data(f, k, results, timeout, ntest, range_test)
-    
-    
+
+
 if __name__ == "__main__":
     timeout = 60
-    ntest = 1000
+    ntest = 10  
     range_test = [64, 128, 256, 512]
     k = 2
     
