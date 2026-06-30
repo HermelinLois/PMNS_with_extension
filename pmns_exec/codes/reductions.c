@@ -8,17 +8,17 @@
                         BABAI REDUCTION FUNCTION 
 =================================================================*/
 # if IS_BABAI_USABLE
-void reduction_babai_int128(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]) {
-    __int128 S[DEGREE];
-    __int128 SL[DEGREE];
-    __int128 PH2[DEGREE];
+void reduction_babai_int128(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]) {
+    __int128 S[degree];
+    __int128 SL[degree];
+    __int128 PH2[degree];
 
-    coeff_shift_i64(DEGREE, PH2, polynomial, H2);
-    prod_pol_mat_i128(DEGREE, S, PH2, sublattice_inv);
-    coeff_shift_i128(DEGREE, S, S, (H1 - H2));
-    prod_pol_mat_i64(DEGREE, SL, S, sublattice);
+    coeff_shift_i64(degree, PH2, polynomial, H2);
+    prod_pol_mat_i128(degree, S, PH2, sublattice_inv);
+    coeff_shift_i128(degree, S, S, (H1 - H2));
+    prod_pol_mat_i64(degree, SL, S, sublattice);
 
-    for (int i = 0; i < DEGREE; i++)
+    for (int i = 0; i < degree; i++)
         out[i] = polynomial[i] - SL[i];
 }
 # endif
@@ -38,32 +38,32 @@ void reduction_babai_int128(int64_t out[DEGREE], __int128 polynomial[DEGREE], co
         OUT[deg] = (T[deg] + POLYNOMIAL[deg]) >> 64;                                                
 
 
-void reduction_montgomery_int128(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]) {
-    MONTGOMERY_REDUCTION_CORE(__int128, __int128, DEGREE, prod_pol_mat_i64, prod_pol_mat_i128, out, polynomial, sublattice, sublattice_inv);
+void reduction_montgomery_int128(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]) {
+    MONTGOMERY_REDUCTION_CORE(__int128, __int128, degree, prod_pol_mat_i64, prod_pol_mat_i128, out, polynomial, sublattice, sublattice_inv);
 }
 
 
 # if IS_TOEPLITZ_USABLE
-void reduction_montgomery_toeplitz(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2*DEGREE - 1], const uint64_t sublattice_inv[2*DEGREE - 1]) {
-    MONTGOMERY_REDUCTION_CORE(__int128, __int128, DEGREE, prod_pol_mat_toeplitz_i64, prod_pol_mat_toeplitz_i128, out, polynomial, sublattice, sublattice_inv);
+void reduction_montgomery_toeplitz(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[2*degree - 1], const uint64_t sublattice_inv[2*degree - 1]) {
+    MONTGOMERY_REDUCTION_CORE(__int128, __int128, degree, prod_pol_mat_toeplitz_i64, prod_pol_mat_toeplitz_i128, out, polynomial, sublattice, sublattice_inv);
 }
 
 
-void reduction_montgomery_toeplitz_recursive(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2 * DEGREE - 1], const uint64_t sublattice_inv[2 * DEGREE - 1]){
-    MONTGOMERY_REDUCTION_CORE(__int128, __int128, DEGREE, prod_pol_mat_toeplitz_recursive_i64, prod_pol_mat_toeplitz_recursive_i128, out, polynomial, sublattice, sublattice_inv);
+void reduction_montgomery_toeplitz_recursive(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[2 * degree - 1], const uint64_t sublattice_inv[2 * degree - 1]){
+    MONTGOMERY_REDUCTION_CORE(__int128, __int128, degree, prod_pol_mat_toeplitz_recursive_i64, prod_pol_mat_toeplitz_recursive_i128, out, polynomial, sublattice, sublattice_inv);
 }
 # endif
 
 
 # if IS_DOUBLE_SPARSE
-void reduction_montgomery_linear(int64_t out[DEGREE], __int128 polynomial[DEGREE]) {
-    int64_t Q[DEGREE] = {0};
-    __int128 T[DEGREE] = {0};
+void reduction_montgomery_linear(int extension_degree, int degree, int64_t out[degree], __int128 polynomial[degree]) {
+    int64_t Q[degree];
+    __int128 T[degree];
 
-    prod_pol_mat_linear_i64(Q, polynomial);
-    prod_pol_mat_linear_i128(T, Q);
+    prod_pol_mat_linear_i64(extension_degree, degree, Q, polynomial);
+    prod_pol_mat_linear_i128(extension_degree, degree, T, Q);
 
-    for (int deg = 0; deg < DEGREE; deg++)
+    for (int deg = 0; deg < degree; deg++)
         out[deg] = (T[deg] + polynomial[deg]) >> 64;
 }
 # endif
@@ -77,38 +77,38 @@ static inline void init_phi(mpz_t phi) {
     mpz_mul_2exp(phi, phi, PHI_POW);
 }
 
-void reduction_montgomery_mpz(mpz_t out[DEGREE], mpz_t polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]){
-    int64_t Q[DEGREE];
-    mpz_t T[DEGREE];
+void reduction_montgomery_mpz(int degree, mpz_t out[degree], mpz_t polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]){
+    int64_t Q[degree];
+    mpz_t T[degree];
 
     mpz_t tmp, phi;
     mpz_init(tmp);
     init_phi(phi);
 
-    prod_polmpz_mat_i64(DEGREE, Q, polynomial, sublattice_inv, phi);
-    prod_pol_mat_mpz(DEGREE, T, Q, sublattice);
+    prod_polmpz_mat_i64(degree, Q, polynomial, sublattice_inv, phi);
+    prod_pol_mat_mpz(degree, T, Q, sublattice);
 
-    for (int deg = 0; deg < DEGREE; deg++) {
+    for (int deg = 0; deg < degree; deg++) {
         mpz_init_set_ui(tmp, 0);
         mpz_add(tmp, T[deg], polynomial[deg]);
         mpz_fdiv_q_2exp(out[deg], tmp, PHI_POW);
     }
 
     mpz_clears(tmp, phi, NULL);
-    for (int j=0; j<DEGREE; j++) mpz_clear(T[j]);
+    for (int j=0; j<degree; j++) mpz_clear(T[j]);
 }
 
 
-void reduction_montgomery_mpn(int n_limbs, mp_limb_t out[DEGREE][n_limbs], mp_limb_t pol[DEGREE][n_limbs], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]){
+void reduction_montgomery_mpn(int n_limbs, int degree, mp_limb_t out[degree][n_limbs], mp_limb_t pol[degree][n_limbs], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]){
     int SIZE = n_limbs + 1;
-    int64_t Q[DEGREE];
-    mp_limb_t T[DEGREE][SIZE];
-    
-    prod_polmpn_mat_i64(DEGREE, n_limbs, Q, pol, sublattice_inv);
-    prod_pol_mat_mpn(DEGREE, n_limbs, T, Q, sublattice);
+    int64_t Q[degree];
+    mp_limb_t T[degree][SIZE];
+
+    prod_polmpn_mat_i64(degree, n_limbs, Q, pol, sublattice_inv);
+    prod_pol_mat_mpn(degree, n_limbs, T, Q, sublattice);
 
     mp_limb_t tmp[SIZE];
-    for (int deg = 0; deg < DEGREE; deg++) {
+    for (int deg = 0; deg < degree; deg++) {
         mpn_zero(tmp, SIZE);
         int sP = (pol[deg][n_limbs - 1] >> (GMP_NUMB_BITS - 1)) & 1;
 

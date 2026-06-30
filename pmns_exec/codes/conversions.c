@@ -90,7 +90,7 @@ void convert_element_to_pmns_exact(int64_t out[DEGREE], const mp_limb_t element_
 # endif
 
     for (int i=0; i<N_INT_RED_CLASSICAL; i++)
-        reduction_montgomery_mpz(vector, vector, L, L_INV);
+        reduction_montgomery_mpz(DEGREE, vector, vector, L, L_INV);
 
     for (int deg=0; deg<DEGREE; deg++)
         out[deg] = mpz_get_si(vector[deg]);
@@ -110,7 +110,7 @@ void convert_element_to_pmns_fast(int64_t out[DEGREE], const mp_limb_t element_d
         }
     }
     
-    reduction_montgomery_int128(out, polynomial, L, L_INV);
+    reduction_montgomery_int128(DEGREE, out, polynomial, L, L_INV);
 }
 
 
@@ -141,7 +141,7 @@ void convert_element_to_pmns_pseudo_fast(int64_t out[DEGREE], const mp_limb_t el
     }
 
     for (int it = 0; it < N_INT_RED_PSEUDO_FAST; it++)
-        reduction_montgomery_mpn(POL_LIMBS, vector, vector, L, L_INV);
+        reduction_montgomery_mpn(POL_LIMBS, DEGREE, vector, vector, L, L_INV);
 
     for (int i=0; i<DEGREE; i++)
         out[i] = (int64_t)vector[i][0];
@@ -157,7 +157,7 @@ void convert_element_to_pmns_vector(int64_t out[EXTENSION_DEGREE][DEGREE], const
             uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
             addmul_pol64_int64(DEGREE, polynomial, PMNS_THETA_FAST[deg][i], part);
         }
-        reduction_montgomery_int128(out[deg], polynomial, L, L_INV);
+        reduction_montgomery_int128(DEGREE, out[deg], polynomial, L, L_INV);
     }
 }
 

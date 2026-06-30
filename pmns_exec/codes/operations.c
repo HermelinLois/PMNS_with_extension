@@ -463,47 +463,47 @@ void prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], cons
 
 
 #if IS_DOUBLE_SPARSE
-void prod_pol_mat_linear_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE]) {
-    for (int i=0; i<EXTENSION_DEGREE; i++){
+void prod_pol_mat_linear_i64(int extension_degree, int degree, int64_t out[degree], __int128 polynomial[degree]) {
+    for (int i=0; i<extension_degree; i++){
         __int128 coeff_1 = polynomial[i];
-        __int128 coeff_2 = polynomial[i + EXTENSION_DEGREE];
+        __int128 coeff_2 = polynomial[i + extension_degree];
 
         out[i] = (int64_t)(coeff_1 * LAMBDA_INV_MOD + GAMMA_POW_N_LAMBDA_MOD * coeff_2);
     }
 
-    for (int i=EXTENSION_DEGREE; i<DEGREE - EXTENSION_DEGREE; i++){
+    for (int i=extension_degree; i<degree - extension_degree; i++){
         __int128 coeff_1 = polynomial[i];
-        __int128 coeff_2 = polynomial[i + EXTENSION_DEGREE];
+        __int128 coeff_2 = polynomial[i + extension_degree];
 
         out[i] = (int64_t)((-GAMMA_POW_K_MOD * coeff_2) - coeff_1);
     }
 
-    for (int i=DEGREE - EXTENSION_DEGREE; i<DEGREE; i++){
+    for (int i=degree - extension_degree; i<degree; i++){
         __int128 coeff_1 = polynomial[i];
-        __int128 coeff_2 = polynomial[i + EXTENSION_DEGREE - DEGREE];
+        __int128 coeff_2 = polynomial[i + extension_degree - degree];
 
         out[i] = (int64_t)(-coeff_1 - GAMMA_POW_N_LAMBDA_MOD * coeff_2);
     }
 }
 
-void prod_pol_mat_linear_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE]){
-    for (int i=0; i<EXTENSION_DEGREE; i++){
+void prod_pol_mat_linear_i128(int extension_degree, int degree, __int128 out[degree], int64_t polynomial[degree]){
+    for (int i=0; i<extension_degree; i++){
         __int128 coeff_1 = polynomial[i];
-        __int128 coeff_2 = polynomial[i + EXTENSION_DEGREE];
+        __int128 coeff_2 = polynomial[i + extension_degree];
 
         out[i] = -LAMBDA * coeff_1 - GAMMA_POW_K_MOD * coeff_2;
     }
 
-    for (int i=EXTENSION_DEGREE; i<DEGREE - EXTENSION_DEGREE; i++){
+    for (int i=extension_degree; i<degree - extension_degree; i++){
         __int128 coeff_1 = polynomial[i];
-        __int128 coeff_2 = polynomial[i + EXTENSION_DEGREE];
+        __int128 coeff_2 = polynomial[i + extension_degree];
 
         out[i] = (__int128)(coeff_1 - GAMMA_POW_K_MOD * coeff_2);
     }
 
-    for (int i=DEGREE - EXTENSION_DEGREE; i<DEGREE; i++){
+    for (int i=degree - extension_degree; i<degree; i++){
         __int128 coeff_1 = polynomial[i];
-        __int128 coeff_2 = polynomial[i + EXTENSION_DEGREE - DEGREE];
+        __int128 coeff_2 = polynomial[i + extension_degree - degree];
 
         out[i] = (__int128)(coeff_1 + (__int128)(GAMMA_POW_K_MOD) * coeff_2);
     }

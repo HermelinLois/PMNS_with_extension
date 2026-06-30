@@ -64,8 +64,8 @@ void prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], cons
 # endif
 
 #if IS_DOUBLE_SPARSE
-void prod_pol_mat_linear_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE]);
+void prod_pol_mat_linear_i64(int extension_degree, int degree, int64_t out[degree], __int128 polynomial[degree]);
 
-void prod_pol_mat_linear_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE]);
+void prod_pol_mat_linear_i128(int extension_degree, int degree, __int128 out[degree], int64_t polynomial[degree]);
 #endif
 #endif
