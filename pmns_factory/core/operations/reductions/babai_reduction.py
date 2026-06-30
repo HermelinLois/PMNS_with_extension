@@ -140,6 +140,8 @@ def gen_params_for_babai(L, phi_pow:int, rho:int, pol_e):
 
     maximum_value = max(abs(c) for c in l_inv)
     h1 = floor(log((2**(phi_pow - 1) -0.5) / (maximum_value), 2))
+    if h1 <= 0:
+        return None
     
     L_inv_babai = matrix([ [Integer((RR(2**h1 * x)).round()) for x in vect] for vect in l_inv])
 
@@ -152,6 +154,9 @@ def gen_params_for_babai(L, phi_pow:int, rho:int, pol_e):
         
     w = search_memory_overhead(pol_e)
     maximum_value = rho**2 * w
+    
     h2 = floor(log(maximum_value / (2**(phi_pow -1) + 1), 2)) + 1
+    if h2 <= 0:
+        return None
     
     return h1, h2, L_inv_babai

@@ -76,7 +76,9 @@ def search_base_rho_and_gamma(roots: list, k: int, p: int, phi: int, pol_e, spar
 
     for gamma in roots:
         # Generate reduced lattice base
-        base = gen_null_base(k, p, pol_e, gamma, sparse=sparse).LLL()
+        base = gen_null_base(k, p, pol_e, gamma, sparse=sparse)
+        if not sparse:
+            base = base.LLL()
 
         # Norm of the base
         rho = Integer(base.norm(1) - 1)

@@ -23,14 +23,14 @@ def is_gamma_feasible(p:int, k:int) -> bool:
     # Ensure p is Sage Integer to handle large primes
     p = Integer(p)
     
-    # We verify that gcd(k, (p^k - 1)/p-1) > 1 to ensure the possibility
+    # We verify that gcd(k, (p^k - 1)/p-1) == k to ensure the possibility
     # of finding a suitable gamma for PMNS construction. This condition arises 
     # from the fact that we need to find an element gamma in the extension field 
-    # such that its powers generate a basis of the field, and that gamma^k is an
+    # such that its powers aren't an integer and that gamma^k is an
     # integer. the following condition is a necessary condition for the existence of such an element.
     # however, it is not a sufficient condition, and further checks are needed to confirm the existence of a suitable gamma.
     value = (square_and_multiply(p, k) - 1) // (p-1)    
-    return gcd(k, value) > 1
+    return gcd(k, value) == k
 
 
 def is_root_free(root, k: int, p: int) -> bool:
@@ -112,21 +112,21 @@ def select_roots(roots:list, p:int, k:int):
 
 
 
-def search_roots(p:int, k:int, pol_e, K) -> list:
+def search_roots(K, pol_e) -> list:
     """
     Retrieve roots of polynomial pol_e in GF(p^k) suitable for PMNS construction.
     Here, we search roots such that their powers generate a base of the extension field,     and if requested, we can search roots such that root^k is an integer, which allows us
     to generate sparse matrices for reduction in PMNS and thus optimize reduction in PMNS.
     
     Args:
-        p (int): prime use to create extension field
-        k (int): degree of the extension
-        pol_e (polynomial): polynomial use for external reduction in PMNS
         K (field) : named extension field used with PMNS construction
+        pol_e (polynomial): polynomial use for external reduction in PMNS
         
     Returns:
         list (extension field element): roots of pol_e in GF(p^k) suitable for PMNS representation
     """
+    k = K.degree()
+    p = K.characteristic()
     PR = PolynomialRing(K,"X")
 
     # create polynomial space

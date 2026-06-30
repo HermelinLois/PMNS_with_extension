@@ -33,3 +33,5 @@ pmns_exec/tests/*.h
 pmns_exec/config_pmns
 
 /test_*
+
+/pmns_factory/pmns_E_type0_vector.py

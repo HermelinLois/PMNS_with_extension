@@ -114,7 +114,8 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str="z") -
         iteration += 1
         # construction of the polynomial pol_e
         pol_e = gen_pol_e(n, lamb)
-        roots = search_roots(p, k, pol_e, K)
+        print(pol_e)
+        roots = search_roots(K, pol_e)
 
         if roots:
             # search suitable element to construct a PMNS using found roots

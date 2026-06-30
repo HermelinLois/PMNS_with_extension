@@ -96,7 +96,7 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str="z") -
     p = Integer(p)
     
     # this condition permit to know if we can construct irreducible polynomial to construct extension field
-    assert gcd(k, p-1) == k, f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+    assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
 
     if n is None:
         n = search_minimal_degree(p, k, phi_pow)
@@ -115,7 +115,7 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str="z") -
         iteration +=1
         # construction of the polynomial pol_e
         pol_e = gen_pol_e(n, lamb)
-        roots = search_roots(p, k, pol_e, K)
+        roots = search_roots(K, pol_e)
 
         if roots:
             # search suitable element to construct a PMNS using found roots

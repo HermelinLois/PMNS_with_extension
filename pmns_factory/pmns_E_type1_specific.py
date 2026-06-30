@@ -90,7 +90,7 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str ="z") 
     p = random_prime(2**psize, lbound=2**(psize-1))
     p = Integer(p)
     
-    assert gcd(k, p-1) == k, f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+    assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
 
     if n is None:
         n = search_minimal_degree(p, k, phi_pow)
@@ -108,7 +108,7 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str ="z") 
     while parameters_not_found:
         iteration += 1
         pol_e = gen_pol_e(n, k, alpha, beta)
-        roots = search_roots(p, k, pol_e, K)
+        roots = search_roots(K, pol_e)
 
         if roots:
             result = search_base_rho_and_gamma(roots, k, p, phi, pol_e)

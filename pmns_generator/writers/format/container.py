@@ -8,12 +8,9 @@ CURRENT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = CURRENT_DIR.parent.parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
-    
-OUTPUT_DIR = "pmns_exec"
-OUTPUT_DIR_SAVES = Path(OUTPUT_DIR) / "saves"
 
 from ..format import format_element as format
-
+import config
 from pmns_factory.core.operations.convertions_gestion import compute_conversion_tables, compute_nb_internal_reductions, gen_transition_matrix
 from pmns_factory.core.operations.reductions.babai_reduction import gen_params_for_babai
 from pmns_factory.core.operations.reductions.montgomery_reduction import gen_mn_reduction_matrix, search_polynomial_m
@@ -209,7 +206,7 @@ class PMNSContainer:
 
 
     def save(self):
-        path = OUTPUT_DIR_SAVES
+        path = config.OUTPUT_DIR_SAVES
         path.mkdir(parents=True, exist_ok=True)
         
         filename = f"pmns_p{self.params['p'].nbits()}_k{self.params['k']}_E{self.params['type']}_{self.params['struct']}.pkl"
@@ -220,7 +217,7 @@ class PMNSContainer:
             
     @classmethod
     def load(cls, pbits:int, k:int, Etype:int, structure:str="generic"):
-        path = OUTPUT_DIR_SAVES / f"pmns_p{pbits}_k{k}_E{Etype}_{structure}.pkl"
+        path = config.OUTPUT_DIR_SAVES / f"pmns_p{pbits}_k{k}_E{Etype}_{structure}.pkl"
         
         if not path.exists():
             raise FileNotFoundError(f"Path to file {path} doesn't seems to exist.")

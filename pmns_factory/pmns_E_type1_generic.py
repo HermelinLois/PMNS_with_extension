@@ -85,7 +85,7 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str ="z") 
     while parameters_not_found:
         iteration += 1
         pol_e = gen_pol_e(n, k, alpha, beta)
-        roots = search_roots(p, k, pol_e, K)
+        roots = search_roots(K, pol_e)
 
         if roots:
             result = search_base_rho_and_gamma(roots, k, p, phi, pol_e)
