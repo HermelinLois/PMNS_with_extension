@@ -508,3 +508,4 @@ void prod_pol_mat_linear_i128(__int128 out[DEGREE], int64_t polynomial[DEGREE]){
     }
 }
 #endif
+
