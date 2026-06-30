@@ -6,7 +6,7 @@
 #include <gmp.h>
 #include "../params/pmns_params.h"
 
-void rand_field_element(mp_limb_t out[EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state);
+void rand_field_element(int extension_degree, mp_limb_t out[extension_degree][N_LIMBS], gmp_randstate_t state);
 
 void print_pol(int degree, int64_t P[degree]);
 

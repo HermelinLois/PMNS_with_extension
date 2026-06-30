@@ -43,7 +43,7 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
     int64_t polynomial[DEGREE];
 	
 	for(int i=0;i<N_BENCH_TESTS;i++){
-		rand_field_element(a, state);
+		rand_field_element(EXTENSION_DEGREE, a, state);
 		to_pmns(polynomial, a);
 	}
 	
@@ -92,7 +92,7 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
 
 static inline void gen_tests_pool(mp_limb_t pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state){
     for (int i=0; i<N_BENCH_SAMPLES; i++)
-        rand_field_element(pool[i], state);
+        rand_field_element(EXTENSION_DEGREE, pool[i], state);
 }
 
 void test_speed(){
