@@ -138,20 +138,22 @@ make
 ### Example 2: Generate for research (no compilation)
 
 ```bash
-make generate NTESTS=0 NBITS=256 K=3
 # generates parameter headers only, no C compilation
+make generate NTESTS=0 NBITS=256 K=3      
 ```
 
 ### Example 3: Load previously computed PMNS
 
 ```bash
-make LOAD=o      # Attempts to load from pmns_exec/saves/ (if available else construct it)
+# Attempts to load from pmns_exec/saves/ (if available else construct it)
+make LOAD=o      
 ```
 
 ### Example 4: Clean and rebuild
 
 ```bash
-make clean && make NBITS=512 K=4
+# Clear previous files and start a new generation with a 512-bit prime and an extension degree of 4
+make clean && make NBITS=512 K=4  
 ```
 
 ## Generated output structure
