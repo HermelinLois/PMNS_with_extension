@@ -176,7 +176,6 @@ The project supports two main reduction strategies:
 ### Montgomery reduction
 
 - standard modular reduction technique
-- requires precomputed parameters
 
 ### Babai rounding
 
