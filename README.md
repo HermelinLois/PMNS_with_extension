@@ -107,6 +107,7 @@ make generate NTESTS=0
 ```bash
 make clean          # Remove generated files and executables
 make help           # Display help message
+make recompile      # Recreate executables
 ```
 
 ### Available parameters
