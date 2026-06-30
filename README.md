@@ -121,7 +121,7 @@ make recompile      # Recreate executables
 | `NTESTS` | int | 10 | Number of tests |
 | `OPT` | string | `-O3 -funroll-loops` | Compilation flags |
 | `LOAD` | flag | - | Load precomputed PMNS if it exists |
-| `NOPT` | int | 0 | Start the PMNS construction with n=NOPT|
+| `NOPT` | int | None | Start the PMNS construction with a `n=NOPT` if defined|
 
 ## Examples
 
