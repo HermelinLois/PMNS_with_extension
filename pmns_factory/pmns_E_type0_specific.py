@@ -4,7 +4,7 @@
 # specific structure of the extension field
 # ==================================================
 
-from sage.all import PolynomialRing, ZZ, Integer, GF, random_prime, factor, gcd, primitive_root
+from sage.all import PolynomialRing, ZZ, Integer, GF, random_prime, factor, primitive_root
 from pmns_factory.core.parameters.params_gestion import search_minimal_degree as SMD, search_base_rho_and_gamma, search_memory_overhead, cast_polynomial_to_minimal_representation
 from pmns_factory.core.parameters.roots_gestion import is_gamma_feasible, search_roots
 
@@ -16,6 +16,8 @@ def gen_pol_e(n:int, lamb:int):
     return X**n - lamb
 
 def construct_irreducible_polynomial(k, p):
+    assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+
     # check if k = 0 mod(4) and in that case check 
     # if p = 1 mod(4) 
     if k%4 == 0 and p%4 != 1:
@@ -96,17 +98,14 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str="z") -
     p = Integer(p)
     
     # this condition permit to know if we can construct irreducible polynomial to construct extension field
-    assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+    mod = construct_irreducible_polynomial(k, p)
+    assert mod is not None, f"Impossible to construct specific extension field with {p= } and {k= }"
+    K = GF(p**k, name=name, modulus=mod)
 
     if n is None:
         n = search_minimal_degree(p, k, phi_pow)
     lamb = INIT_LAMB
     phi = 2**phi_pow
-
-    # extension field creation
-    mod = construct_irreducible_polynomial(k, p)
-    assert mod is not None, f"Impossible to construct specific extension field with {p= } and {k= }"
-    K = GF(p**k, name=name, modulus=mod)
 
     parameters_not_found = True
     result = None

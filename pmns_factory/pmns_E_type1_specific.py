@@ -11,6 +11,8 @@ def gen_pol_e(n, k, alpha, beta):
     return X**n - alpha * X**k - beta
 
 def construct_irreducible_polynomial(k, p):
+    assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+    
     # check if k = 0 mod(4) and in that case check 
     # if p = 1 mod(4) 
     if k%4 == 0 and p%4 != 1:
@@ -89,18 +91,16 @@ def gen_parameters(psize:int, k:int, phi_pow:int=64, n:int=None, name:str ="z") 
     
     p = random_prime(2**psize, lbound=2**(psize-1))
     p = Integer(p)
-    
-    assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
+
+    mod = construct_irreducible_polynomial(k, p)
+    assert mod is not None, f"Impossible to construct specific extension field with {p= } and {k= }"
+    K = GF(p**k, name=name, modulus=mod)
 
     if n is None:
         n = search_minimal_degree(p, k, phi_pow)
     alpha = INIT_ALPHA
     beta = INIT_BETA
-    phi = 2**phi_pow
-
-    mod = construct_irreducible_polynomial(k, p)
-    assert mod is not None, f"Impossible to construct specific extension field with {p= } and {k= }"
-    K = GF(p**k, name=name, modulus=mod)
+    phi = 2**phi_pow   
 
     parameters_not_found = True
     result = None
