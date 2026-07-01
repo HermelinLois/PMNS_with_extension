@@ -26,6 +26,15 @@ def write_pmns_config(output_dir: Path, container: dict) -> None:
 
 
 def get_container(args):
+    """
+    Get the PMNS container based on command line arguments.
+
+    Args:
+        args (argparse.Namespace): Parsed command line arguments
+
+    Returns:
+        PMNSContainer: The generated or loaded PMNS container
+    """
     if args.load:
         try:
             return PMNSContainer.load(args.nbits, args.k, args.Etype, args.struct), True
@@ -50,6 +59,9 @@ ACTION_CONSTRUCT = "construct"
 ACTION_VALUES = "new_values"
 
 def get_args():
+    """
+    Parse command line arguments for PMNS parameter generation and test vector creation.
+    """
     parser = argparse.ArgumentParser("PMNS parameters")
     parser.add_argument("-n", type=int, default=None, help=f"Minimal wanted degree of the reduction polynomial. If not provided, the minimal degree will be computed.")
     parser.add_argument("-ntests", type=int, default=100, help="Number of test vectors to generate (default: 100)")
@@ -67,6 +79,11 @@ def get_args():
 
 
 def main():
+    """
+    Main function to handle PMNS parameter generation and test creation based on command line arguments.
+    If action is "construct", it generates and saves PMNS parameters, then generates test values and write specific parameters in 'pmns_exec'.
+    If action is "new_values", it generates new test using existing PMNS parameters and writes the corresponding values in 'pmns_exec'.
+    """
     args = get_args()
     container, was_loaded = get_container(args)
     

@@ -17,7 +17,7 @@
 
 
 extern "C" {
-void rand_field_element(int extension_degree, mp_limb_t a[][N_LIMBS], gmp_randstate_t state);
+void rand_field_element(int extension_degree, mp_limb_t (*a)[N_LIMBS], gmp_randstate_t state);
 
 void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t *out, const mp_limb_t (*element_data)[N_LIMBS]);
 
