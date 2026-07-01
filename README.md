@@ -66,10 +66,10 @@ test_reductions, test_conversions, test_libraries_vs_pmns (executables)
 - **PMNS_CONFIG**: PMNS types and structures
   - `ETYPE0`: reduction polynomial form $E = X^n - \lambda$
   - `ETYPE1`: reduction polynomial form $E = X^n - \alpha X^k - \beta$
-  - Structures: `generic`, `specific`, `sparse`:
+  - Structures: `generic`, `specific`, `dsparse`:
     - `generic` — generic construction without extra restrictions;
     - `specific` — construction using a simple extension polynomial (e.g. $X^k - a$);
-    - `sparse` — constructions where reduction elements are sparse.
+    - `dsparse` — constructions where reduction elements are double sparse.
     To reduce some conversions cost, we use specific extension field construction.
 
 ## Usage guide

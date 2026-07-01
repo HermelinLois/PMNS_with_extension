@@ -13,7 +13,7 @@ from pmns_factory.core.operations.reductions.montgomery_reduction import montgom
 from pmns_factory.core.operations.reductions.babai_reduction import babai_rounding_limited_reduction
 import pmns_factory.pmns_E_type0_generic as type0_generic
 import pmns_factory.pmns_E_type0_specific as type0_specific
-import pmns_factory.pmns_E_type0_sparse as type0_sparse
+import pmns_factory.pmns_E_type0_double_sparse as type0_sparse
 import pmns_factory.pmns_E_type1_generic as type1_generic
 import pmns_factory.pmns_E_type1_specific as type1_specific
 
@@ -42,7 +42,7 @@ ETYPE1 = 1
 
 STRUCT_GENERIC = "generic"
 STRUCT_SPECIFIC = "specific"
-STRUCT_SPARSE = "sparse"
+STRUCT_SPARSE = "dsparse"
 
 PMNS_CONFIG = {
     ETYPE0: {

@@ -11,7 +11,7 @@ if str(ROOT_DIR) not in sys.path:
 import pmns_factory.pmns_E_type0_generic as type0
 import pmns_factory.pmns_E_type1_generic as type1
 import pmns_factory.pmns_E_type0_specific as specific_type0
-import pmns_factory.pmns_E_type0_sparse as sparse_type0
+import pmns_factory.pmns_E_type0_double_sparse as sparse_type0
 
 GOOD = 'GOOD'
 BAD = 'BAD'
