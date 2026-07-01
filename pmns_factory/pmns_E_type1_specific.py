@@ -8,9 +8,21 @@ INIT_ALPHA = 1
 INIT_BETA = 2
 
 def gen_pol_e(n, k, alpha, beta):
+    """
+    Generate the polynomial E = X^n - alpha*X^k - beta.
+    """
     return X**n - alpha * X**k - beta
 
 def construct_irreducible_polynomial(k, p):
+    """
+    Construct an irreducible polynomial of the form X^k - b over Z/pZ,
+    where b is a primitive root of p, if possible.
+    Args:
+        k (int): the extension degree of the field
+        p (int): the prime
+    Returns:
+        Polynomial: the irreducible polynomial if it can be constructed, None otherwise
+    """
     assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
     
     # check if k = 0 mod(4) and in that case check 
@@ -32,6 +44,17 @@ def construct_irreducible_polynomial(k, p):
         
         
 def increase_parameters(pol_e, p:int, k:int, phi:int) -> tuple:
+    """
+    Increase the parameters of the reduction polynomial E = X^n - alpha*X^k - beta
+    to find a suitable polynomial for constructing a PMNS with p, k and phi.
+    Args:
+        pol_e (Polynomial): the current reduction polynomial
+        p (int): the prime
+        k (int): the extension degree of the field
+        phi (int): the word size parameter of the architecture
+    Returns:
+        tuple: a tuple containing the new alpha, beta and the new degree n of the reduction polynomial
+    """
     n = pol_e.degree()
     beta = - pol_e[0]
     alpha = -pol_e[k]
@@ -59,6 +82,17 @@ def increase_parameters(pol_e, p:int, k:int, phi:int) -> tuple:
 
 
 def search_minimal_degree(p: int, k: int, phi_pow: int) -> int:
+    """
+    Function that search minimal degree from wich we can possibly construct a PMNS from our initial coefficients
+
+    Args:
+        p (int): prime use to construct extension field
+        k (int): extension degree
+        phi_pow (int): word size of the architecture
+
+    Returns:
+        int: degree from wich we can possibly construct a PMNS
+    """
     init_polynomial = lambda n : gen_pol_e(n, k, INIT_ALPHA, INIT_BETA)
     n = SMD(p, k, phi_pow, init_polynomial)
 

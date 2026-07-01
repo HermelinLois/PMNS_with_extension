@@ -13,9 +13,21 @@ X = PR.gen()
 INIT_LAMB = 2
 
 def gen_pol_e(n:int, lamb:int):
+    """
+    Generate the polynomial E = X^n - lambda.
+    """
     return X**n - lamb
 
 def construct_irreducible_polynomial(k, p):
+    """
+    Construct an irreducible polynomial of the form X^k - b over Z/pZ,
+    where b is a primitive root of p, if possible.
+    Args:
+        k (int): the extension degree of the field
+        p (int): the prime
+    Returns:
+        Polynomial: the irreducible polynomial if it can be constructed, None otherwise
+    """
     assert is_gamma_feasible(p, k), f"impossible to construct an irreducible polynomial over Z/pZ with {p=} and {k=}"
 
     # check if k = 0 mod(4) and in that case check 
@@ -37,6 +49,17 @@ def construct_irreducible_polynomial(k, p):
 
 
 def increase_parameters(pol_e, p:int, k:int, phi:int) -> tuple:
+    """
+    Increase the parameters of the reduction polynomial E = X^n - lambda
+    to find a suitable polynomial for constructing a PMNS with p, k and phi.
+    Args:
+        pol_e (Polynomial): the current reduction polynomial
+        p (int): the prime
+        k (int): the extension degree of the field
+        phi (int): the word size parameter of the architecture
+    Returns:
+        tuple: a tuple containing the new lambda and the new degree n of the reduction polynomial
+    """
     n = pol_e.degree()
     lamb = - pol_e[0]
     n_lamb = lamb + 1

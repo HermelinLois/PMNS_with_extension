@@ -1,6 +1,6 @@
 from sage.all import PolynomialRing, ZZ, Integer, GF, random_prime
 from pmns_factory.core.parameters.params_gestion import search_minimal_degree as SMD, search_base_rho_and_gamma, search_memory_overhead, cast_polynomial_to_minimal_representation
-from pmns_factory.core.parameters.roots_gestion import is_gamma_feasible, search_roots
+from pmns_factory.core.parameters.roots_gestion import search_roots
 
 PR = PolynomialRing(ZZ, "X")
 X = PR("X")
@@ -8,9 +8,23 @@ INIT_ALPHA = 1
 INIT_BETA = 2
 
 def gen_pol_e(n, k, alpha, beta):
+    """
+    Generate the polynomial E = X^n - alpha*X^k - beta.
+    """
     return X**n - alpha * X**k - beta
 
 def increase_parameters(pol_e, p:int, k:int, phi:int) -> tuple:
+    """
+    Increase the parameters of the reduction polynomial E = X^n - alpha*X^k - beta
+    to find a suitable polynomial for constructing a PMNS with p, k and phi.
+    Args:
+        pol_e (Polynomial): the current reduction polynomial
+        p (int): the prime
+        k (int): the extension degree of the field
+        phi (int): the word size parameter of the architecture
+    Returns:
+        tuple: a tuple containing the new alpha, beta and the new degree n of the reduction polynomial
+    """
     n = pol_e.degree()
     beta = - pol_e[0]
     alpha = -pol_e[k]
@@ -38,6 +52,17 @@ def increase_parameters(pol_e, p:int, k:int, phi:int) -> tuple:
 
 
 def search_minimal_degree(p: int, k: int, phi_pow: int) -> int:
+    """
+    Function that search minimal degree from wich we can possibly construct a PMNS from our initial coefficients
+
+    Args:
+        p (int): prime use to construct extension field
+        k (int): extension degree
+        phi_pow (int): word size of the architecture
+
+    Returns:
+        int: degree from wich we can possibly construct a PMNS
+    """
     init_polynomial = lambda n : gen_pol_e(n, k, INIT_ALPHA, INIT_BETA)
     n = SMD(p, k, phi_pow, init_polynomial)
 
