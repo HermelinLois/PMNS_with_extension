@@ -9,6 +9,8 @@
 # include "../codes/interfaces/test_utils_interface.h"
 # include "../codes/interfaces/measurement_utils_interface.h"
 
+
+
 void test_equality(){
     if (N_TESTS == 0) {
         printf("No tests to run. To add tests, run 'make new-tests NTESTS=<number_of_tests>'\n");
@@ -19,22 +21,22 @@ void test_equality(){
 
     for (int idx=0; idx<N_TESTS; idx++){
         reset_polynomial(DEGREE, polynomial);
-        convert_element_to_pmns_exact(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
+        convert_element_to_pmns_exact(EXTENSION_DEGREE, DEGREE, polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
         check_equality(DEGREE, CONVERTED_ELEMENTS_EXACT[idx], polynomial, "exact");
 
         reset_polynomial(DEGREE, polynomial);
-        convert_element_to_pmns_pseudo_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
+        convert_element_to_pmns_pseudo_fast(EXTENSION_DEGREE, DEGREE, polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
         check_equality(DEGREE, CONVERTED_ELEMENTS_PSEUDO_FAST[idx], polynomial, "pseudo-fast");
 
         reset_polynomial(DEGREE, polynomial);
-        convert_element_to_pmns_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
+        convert_element_to_pmns_fast(EXTENSION_DEGREE, DEGREE, polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
         check_equality(DEGREE, CONVERTED_ELEMENTS_FAST[idx], polynomial, "fast");
     }
     printf("Conversions seems to work with given parameters\n");
 }
 
 
-void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]), mp_limb_t tests_pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], char* method_name, gmp_randstate_t state){
+void do_bench(void (*to_pmns)(int extension_degree, int degree, int64_t pmns[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]), mp_limb_t tests_pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], char* method_name, gmp_randstate_t state){
 	uint64_t *cycles = (uint64_t *)calloc(N_BENCH_TESTS,sizeof(uint64_t)), *statTimer;
 	uint64_t timermin , timermax, meanTimermin =0,	medianTimer = 0,meanTimermax = 0;
     uint64_t t1,t2, diff_t;
@@ -44,7 +46,7 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
 	
 	for(int i=0;i<N_BENCH_TESTS;i++){
 		rand_field_element(EXTENSION_DEGREE, a, state);
-		to_pmns(polynomial, a);
+		to_pmns(EXTENSION_DEGREE, DEGREE, polynomial, a);
 	}
 	
 	for(int i=0;i<N_BENCH_SAMPLES;i++){
@@ -59,7 +61,7 @@ void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data
             reset_polynomial(DEGREE, polynomial);
 
 			t1 = cpucyclesStart();
-			to_pmns(polynomial, element_data);
+			to_pmns(EXTENSION_DEGREE, DEGREE, polynomial, element_data);
 			t2 = cpucyclesStop();
 
 			diff_t = cycles_diff(t1, t2);

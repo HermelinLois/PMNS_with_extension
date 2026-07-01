@@ -35,19 +35,19 @@ static inline uint64_t apply_mask(const mp_limb_t element_data[N_LIMBS], uint64_
 
 
 // init mpz_t with element data and multiply the values by phi^power mod p
-static inline void init_element_times_phipow(mpz_t out[DEGREE], const mp_limb_t data[EXTENSION_DEGREE][N_LIMBS], unsigned int power) {
+static inline void init_element_times_phipow(int extension_degree, int degree, mpz_t out[degree], const mp_limb_t data[extension_degree][N_LIMBS], unsigned int power) {
     mpz_t prime, coeff, acc;
     mpz_inits(prime, coeff, acc, NULL);
     mpz_import(prime, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
     
-    for (int deg = 0; deg < EXTENSION_DEGREE; deg++) {
+    for (int deg = 0; deg < extension_degree; deg++) {
         mpz_init(out[deg]);
         mpz_import(coeff, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, data[deg]);
         mpz_mul_2exp(coeff, coeff, PHI_POW * power);
         mpz_mod(out[deg], coeff, prime);
     }
     
-    for (int j=EXTENSION_DEGREE; j<DEGREE; j++) mpz_init_set_ui(out[j], 0);
+    for (int j=extension_degree; j<degree; j++) mpz_init_set_ui(out[j], 0);
     mpz_clears(prime, coeff, acc, NULL);
 }
 
@@ -56,15 +56,15 @@ static inline void init_element_times_phipow(mpz_t out[DEGREE], const mp_limb_t 
 // compute the product of the given element with the transition matrix and apply modulus p to the result
 // with our implementation, element are express in gamma basis, no need to convert element
 
-static inline void element_change_basis(mpz_t out[DEGREE], mpz_t extension_element[DEGREE]){
+static inline void element_change_basis(int extension_degree, int degree, mpz_t out[degree], mpz_t extension_element[degree]){
     mpz_t acc, coeff, prime, tmp;
     mpz_inits(acc, coeff, prime, tmp, NULL);
     mpz_import(prime, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
 
-    for (int j=0; j<EXTENSION_DEGREE; j++){
+    for (int j=0; j<extension_degree; j++){
         mpz_init_set_ui(tmp, 0);
 
-        for (int i=0; i<EXTENSION_DEGREE; i++){
+        for (int i=0; i<extension_degree; i++){
             mpz_import(coeff, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, TRANSITION_MATRIX[i][j]);
             mpz_mul(coeff, extension_element[i], coeff);
             mpz_add(tmp, tmp, coeff);
@@ -80,110 +80,110 @@ static inline void element_change_basis(mpz_t out[DEGREE], mpz_t extension_eleme
                         CONVERSIONS FUNCTIONS
 =================================================================*/
 // convert an element of the extension field given to its representation in PMNS using the classical method
-void convert_element_to_pmns_exact(int64_t out[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]){
-    mpz_t vector[DEGREE];
+void convert_element_to_pmns_exact(int extension_degree, int degree, int64_t out[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
+    mpz_t vector[degree];
     
-    init_element_times_phipow(vector, element_data, N_INT_RED_CLASSICAL);
+    init_element_times_phipow(extension_degree, degree, vector, element_data, N_INT_RED_CLASSICAL);
 
 # if !IS_ELEMENTS_IN_GAMMA_BASIS
-    element_change_basis(vector, vector);
+    element_change_basis(extension_degree, degree, vector, vector);
 # endif
 
     for (int i=0; i<N_INT_RED_CLASSICAL; i++)
-        reduction_montgomery_mpz(DEGREE, vector, vector, L, L_INV);
+        reduction_montgomery_mpz(degree, vector, vector, L, L_INV);
 
-    for (int deg=0; deg<DEGREE; deg++)
+    for (int deg=0; deg<degree; deg++)
         out[deg] = mpz_get_si(vector[deg]);
 }
 
 
 // convert an element of the extension field given to its representation in PMNS using a fast method
-void convert_element_to_pmns_fast(int64_t out[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]){
-    __int128 polynomial[DEGREE] = {0};    
-
-    for (int deg=0; deg<EXTENSION_DEGREE; deg++){
+void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t out[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
+    __int128 polynomial[degree];    
+    memset(polynomial, 0, sizeof(polynomial));
+    for (int deg=0; deg<extension_degree; deg++){
         size_t mask_pos = 0;
 
         for (int i=0; i<N_POL; i++){
             uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
-            addmul_pol64_int64(DEGREE, polynomial, PMNS_THETA_FAST[deg][i], part);
+            addmul_pol64_int64(degree, polynomial, PMNS_THETA_FAST[deg][i], part);
         }
     }
-    
-    reduction_montgomery_int128(DEGREE, out, polynomial, L, L_INV);
+    reduction_montgomery_int128(degree, out, polynomial, L, L_INV);
 }
 
 
 // convert an element of the extension field given to its representation in PMNS using a pseudo-fast method
-void convert_element_to_pmns_pseudo_fast(int64_t out[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]){
+void convert_element_to_pmns_pseudo_fast(int extension_degree, int degree, int64_t out[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
     int POL_LIMBS = N_INT_RED_PSEUDO_FAST + 1;
-    mp_limb_t vector[DEGREE][POL_LIMBS];
-    mp_limb_t partial_polynomial[DEGREE][POL_LIMBS];
+    mp_limb_t vector[degree][POL_LIMBS];
+    mp_limb_t partial_polynomial[degree][POL_LIMBS];
 
-    for (int i=0; i<DEGREE; i++) mpn_zero(vector[i], POL_LIMBS);
+    for (int i=0; i<degree; i++) mpn_zero(vector[i], POL_LIMBS);
 
     // convert each integer in PMNS representation and multiply theme by a representation
-    for (int deg=0; deg<EXTENSION_DEGREE; deg++){
+    for (int deg=0; deg<extension_degree; deg++){
         size_t mask_pos = 0;
 
-        for (int i=0; i<DEGREE; i++) mpn_zero(partial_polynomial[i], POL_LIMBS);
+        for (int i=0; i<degree; i++) mpn_zero(partial_polynomial[i], POL_LIMBS);
 
         for (int i=0; i<N_POL; i++){
             uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
-            addmul_pol64_int64_mpn(DEGREE, POL_LIMBS, partial_polynomial, PMNS_THETA_PSEUDO_FAST[i], part);
+            addmul_pol64_int64_mpn(degree, POL_LIMBS, partial_polynomial, PMNS_THETA_PSEUDO_FAST[i], part);
         }
 
     # if IS_ELEMENTS_IN_GAMMA_BASIS
-        addmul_polmpn_Xpow_modE(DEGREE, POL_LIMBS, vector, partial_polynomial, deg);
+        addmul_polmpn_Xpow_modE(degree, POL_LIMBS, vector, partial_polynomial, deg);
     # else
-        addmul_polmpn_pol64(DEGREE, POL_LIMBS, vector, partial_polynomial, PMNS_FIELD_ROOTS[deg]);
+        addmul_polmpn_pol64(degree, POL_LIMBS, vector, partial_polynomial, PMNS_FIELD_ROOTS[deg]);
     # endif
     }
 
     for (int it = 0; it < N_INT_RED_PSEUDO_FAST; it++)
-        reduction_montgomery_mpn(POL_LIMBS, DEGREE, vector, vector, L, L_INV);
+        reduction_montgomery_mpn(POL_LIMBS, degree, vector, vector, L, L_INV);
 
-    for (int i=0; i<DEGREE; i++)
+    for (int i=0; i<degree; i++)
         out[i] = (int64_t)vector[i][0];
 }
 
 
-void convert_element_to_pmns_vector(int64_t out[EXTENSION_DEGREE][DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]){
-    for (int deg=0; deg<EXTENSION_DEGREE; deg++){
-        __int128 polynomial[DEGREE] = {0};
+void convert_element_to_pmns_vector(int extension_degree, int degree, int64_t out[extension_degree][degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
+    for (int deg=0; deg<extension_degree; deg++){
+        __int128 polynomial[degree];
+        memset(polynomial, 0, sizeof(polynomial));
         size_t mask_pos = 0;
 
         for (int i=0; i<N_POL; i++){
             uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
-            addmul_pol64_int64(DEGREE, polynomial, PMNS_THETA_FAST[deg][i], part);
+            addmul_pol64_int64(degree, polynomial, PMNS_THETA_FAST[deg][i], part);
         }
-        reduction_montgomery_int128(DEGREE, out[deg], polynomial, L, L_INV);
+        reduction_montgomery_int128(degree, out[deg], polynomial, L, L_INV);
     }
 }
 
 
 // convert a PMNS représentation to the represented element in the extension field
-void convert_pmns_to_element(mp_limb_t out[EXTENSION_DEGREE][N_LIMBS], int64_t polynomial[DEGREE]) {
+void convert_pmns_to_element(int extension_degree, int degree, mp_limb_t out[extension_degree][N_LIMBS], int64_t polynomial[degree]) {
     mpz_t prime, tmp_gamma_pow_part;
     mpz_init(prime);
     mpz_import(prime, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
 
-    mpz_t tmp_result[EXTENSION_DEGREE];
-    for (int j = 0; j < EXTENSION_DEGREE; j++) mpz_init(tmp_result[j]);
+    mpz_t tmp_result[extension_degree];
+    for (int j = 0; j < extension_degree; j++) mpz_init(tmp_result[j]);
 
     mpz_init(tmp_gamma_pow_part);
-    for (int i = 0; i < DEGREE; i++) {
+    for (int i = 0; i < degree; i++) {
         int64_t coeff = polynomial[i];
         if (coeff == 0) continue;
 
-        for (int j = 0; j < EXTENSION_DEGREE; j++) {
+        for (int j = 0; j < extension_degree; j++) {
             mpz_import(tmp_gamma_pow_part, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, GAMMA_POW[i][j]);
             mpz_mul_si(tmp_gamma_pow_part, tmp_gamma_pow_part, coeff);
             mpz_add(tmp_result[j], tmp_result[j], tmp_gamma_pow_part);
         }
     }
 
-    for (int j = 0; j < EXTENSION_DEGREE; j++) {
+    for (int j = 0; j < extension_degree; j++) {
         mpz_mod(tmp_result[j], tmp_result[j], prime);
         mpn_zero(out[j], N_LIMBS);
 
