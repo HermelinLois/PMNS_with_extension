@@ -9,9 +9,9 @@
 /*=================================================================
                 FUNCTIONS USED FOR CONVERSIONS 
 =================================================================*/
-// apply a mask of size mask_size on the element data starting from the position given by mask_start_pos and 
-// return the result as a uint64_t, then increase the mask_start_pos by mask_size
 static inline uint64_t apply_mask(const mp_limb_t element_data[N_LIMBS], uint64_t mask_size, size_t *mask_start_pos) {
+    // apply a mask of size mask_size on the element data starting from the position given by mask_start_pos and 
+    // return the result as a uint64_t, then increase the mask_start_pos by mask_size
     uint64_t start = *mask_start_pos;
     uint64_t limb_idx = start / GMP_NUMB_BITS;
 
@@ -34,8 +34,8 @@ static inline uint64_t apply_mask(const mp_limb_t element_data[N_LIMBS], uint64_
 }
 
 
-// init mpz_t with element data and multiply the values by phi^power mod p
 static inline void init_element_times_phipow(int extension_degree, int degree, mpz_t out[degree], const mp_limb_t data[extension_degree][N_LIMBS], unsigned int power) {
+    // init mpz_t with element data and multiply the values by phi^power mod p
     mpz_t prime, coeff, acc;
     mpz_inits(prime, coeff, acc, NULL);
     mpz_import(prime, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
@@ -53,10 +53,9 @@ static inline void init_element_times_phipow(int extension_degree, int degree, m
 
 
 # if !IS_ELEMENTS_IN_GAMMA_BASIS
-// compute the product of the given element with the transition matrix and apply modulus p to the result
-// with our implementation, element are express in gamma basis, no need to convert element
-
 static inline void element_change_basis(int extension_degree, int degree, mpz_t out[degree], mpz_t extension_element[degree]){
+    // compute the product of the given element with the transition matrix and apply modulus p to the result
+    // with our implementation, element are express in gamma basis, no need to convert element
     mpz_t acc, coeff, prime, tmp;
     mpz_inits(acc, coeff, prime, tmp, NULL);
     mpz_import(prime, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
@@ -79,8 +78,9 @@ static inline void element_change_basis(int extension_degree, int degree, mpz_t 
 /*=================================================================
                         CONVERSIONS FUNCTIONS
 =================================================================*/
-// convert an element of the extension field given to its representation in PMNS using the classical method
 void convert_element_to_pmns_exact(int extension_degree, int degree, int64_t out[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
+    // convert an element of the extension field given to its representation in PMNS using the exact method
+    // This method is slower than the fast method but does not require precomputation of the PMNS representation of the basis elements
     mpz_t vector[degree];
     
     init_element_times_phipow(extension_degree, degree, vector, element_data, N_INT_RED_CLASSICAL);
@@ -97,8 +97,9 @@ void convert_element_to_pmns_exact(int extension_degree, int degree, int64_t out
 }
 
 
-// convert an element of the extension field given to its representation in PMNS using a fast method
 void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t out[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
+    // convert an element of the extension field given to its representation in PMNS using a fast method
+    // This is the fastest conversion method but requires an important number of precomputations
     __int128 polynomial[degree];    
     memset(polynomial, 0, sizeof(polynomial));
     for (int deg=0; deg<extension_degree; deg++){
@@ -113,8 +114,9 @@ void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t out[
 }
 
 
-// convert an element of the extension field given to its representation in PMNS using a pseudo-fast method
 void convert_element_to_pmns_pseudo_fast(int extension_degree, int degree, int64_t out[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
+    // convert an element of the extension field given to its representation in PMNS using a pseudo-fast 
+    // This method require less precomputation than the fast method and is slower but for large element, it is faster than the exact converison method
     int POL_LIMBS = N_INT_RED_PSEUDO_FAST + 1;
     mp_limb_t vector[degree][POL_LIMBS];
     mp_limb_t partial_polynomial[degree][POL_LIMBS];
@@ -147,23 +149,10 @@ void convert_element_to_pmns_pseudo_fast(int extension_degree, int degree, int64
 }
 
 
-void convert_element_to_pmns_vector(int extension_degree, int degree, int64_t out[extension_degree][degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
-    for (int deg=0; deg<extension_degree; deg++){
-        __int128 polynomial[degree];
-        memset(polynomial, 0, sizeof(polynomial));
-        size_t mask_pos = 0;
-
-        for (int i=0; i<N_POL; i++){
-            uint64_t part = apply_mask(element_data[deg], THETA_POW, &mask_pos);
-            addmul_pol64_int64(degree, polynomial, PMNS_THETA_FAST[deg][i], part);
-        }
-        reduction_montgomery_int128(degree, out[deg], polynomial, L, L_INV);
-    }
-}
-
-
-// convert a PMNS représentation to the represented element in the extension field
 void convert_pmns_to_element(int extension_degree, int degree, mp_limb_t out[extension_degree][N_LIMBS], int64_t polynomial[degree]) {
+    // Convert a polynomial in PMNS representation to its representation in the extension field using 
+    // mpz_t to handle the large integers and apply the external reduction if needed easily. 
+    // The result is stored in the out array.
     mpz_t prime, tmp_gamma_pow_part;
     mpz_init(prime);
     mpz_import(prime, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);

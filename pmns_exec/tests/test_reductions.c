@@ -8,6 +8,8 @@
 
 
 void test_equality(){
+    /* Test the different reduction methods and compare the result
+    to the expected values given by python*/
     if (N_TESTS == 0) {
         printf("No tests to run. To add tests, run 'make new-tests NTESTS=<number_of_tests>'\n");
         exit(1);
@@ -18,8 +20,10 @@ void test_equality(){
 
     for (int idx=0; idx<N_TESTS; idx++){
         for (int i=0; i<DEGREE; i++) out[i] = 0;
+        // compute the polynomial product without internal reduction
         polynomials_product(DEGREE, polynomial, POL_A[idx], POL_B[idx]);
 
+        // compute different reductions and compare the result to the expected values
         reduction_montgomery_int128(DEGREE, out, polynomial, L, L_INV);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery");
 

@@ -16,10 +16,13 @@
 }
 
 void coeff_shift_i64(int degree, __int128 out[degree], __int128 polynomial[degree], int n_shift){
+    /*define a function to shift coefficients of a polynomial by n_shift bits to the right, using int128 type for the coefficients
+    and cast the result to int64_t*/
     COEFF_SHIFT_CORE(int64_t, degree, out, polynomial, n_shift);
 }
 
 void coeff_shift_i128(int degree, __int128 out[degree], __int128 polynomial[degree], int n_shift){
+    /*define a function to shift coefficients of a polynomial by n_shift bits to the right, using int128 type for the coefficients*/
     COEFF_SHIFT_CORE(__int128, degree, out, polynomial, n_shift);
 }
 #endif
@@ -37,6 +40,7 @@ void addmul_pol64_int64(int degree, __int128 out[degree], const int64_t polynomi
 
 
 void addmul_pol64_int64_mpn(int degree, int n_limbs, mp_limb_t out[degree][n_limbs], const int64_t polynomial[degree], int64_t coeff){
+    /*compute the product of an int64_t polynomial with an int64_t coefficient and add the result to an mp_limb_t polynomial*/
     if (coeff == 0) return;
 
     for (int deg=0; deg<degree; deg++){
@@ -212,6 +216,7 @@ void addmul_polmpn_Xpow_modE(int degree, int n_limbs, mp_limb_t out[degree][n_li
         FUNCTIONS FOR PRODUCTS WITH POLYNOMIALS AND MATRICES 
 =================================================================*/
 void prod_polmpn_mat_i64(int degree, int n_limbs, int64_t out[degree], mp_limb_t pol[degree][n_limbs], const int64_t sublattice[degree][degree]) {
+    // compute the product of an mp_limb_t polynomial with an int64_t matrix and store the result in an int64_t polynomial
     int SIZE = n_limbs + 1;
     mp_limb_t acc[SIZE];
     mp_limb_t prod[SIZE];
@@ -245,6 +250,7 @@ void prod_polmpn_mat_i64(int degree, int n_limbs, int64_t out[degree], mp_limb_t
 
 
 void prod_pol_mat_mpn(int degree, int n_limbs, mp_limb_t out[degree][n_limbs+1], int64_t pol[degree], const int64_t sublattice[degree][degree]){
+    // compute the product of an int64_t polynomial with an int64_t matrix and store the result in an mp_limb_t polynomial
     int SIZE = n_limbs + 1;
     for (int j = 0; j < degree; j++) {
         mpn_zero(out[j], SIZE);
@@ -275,6 +281,7 @@ void prod_pol_mat_mpn(int degree, int n_limbs, mp_limb_t out[degree][n_limbs+1],
 
 
 void prod_pol_mat_mpz(int degree, mpz_t out[degree], int64_t pol[degree], const int64_t sublattice[degree][degree]) {
+    // compute the product of an int64_t polynomial with an int64_t matrix and store the result in an mpz_t polynomial
     mpz_t tmp;
     mpz_init(tmp);
 
@@ -300,6 +307,7 @@ void prod_pol_mat_mpz(int degree, mpz_t out[degree], int64_t pol[degree], const 
 
 
 void prod_polmpz_mat_i64(int degree, int64_t out[degree], mpz_t pol[degree], const int64_t sublattice[degree][degree], mpz_t phi) {
+    // compute the product of an mpz_t polynomial with an int64_t matrix and store the result in an int64_t polynomial
     mpz_t tmp, acc;
     mpz_inits(tmp, acc, NULL);
 
@@ -316,7 +324,7 @@ void prod_polmpz_mat_i64(int degree, int64_t out[degree], mpz_t pol[degree], con
     mpz_clears(tmp, acc, NULL);
 }
 
-
+// Define a macro to compute the product of a polynomial with a matrix
 #define PROD_POL_MAT_CORE(RETURN_TYPE, DEGREE, OUT, POLYNOMIAL, MATRIX){    \
     for (int i = 0; i < DEGREE; i++) {                                      \
         RETURN_TYPE acc = 0;                                                \
@@ -329,16 +337,19 @@ void prod_polmpz_mat_i64(int degree, int64_t out[degree], mpz_t pol[degree], con
 
 
 void prod_pol_mat_i64(int degree, __int128 out[degree], __int128 polynomial[degree], const int64_t matrix[degree][degree]) {
+    // compute the product of an int128 polynomial with an int64_t matrix mod 2^PHI_POW and store the result in an int128 polynomial
     PROD_POL_MAT_CORE(int64_t, degree, out, polynomial, matrix);
 }
 
 
 void prod_pol_mat_i128(int degree, __int128 out[degree], __int128 polynomial[degree], const int64_t matrix[degree][degree]) {
+    // compute the product of an int128 polynomial with an int64_t matrix and store the result in an int128 polynomial
     PROD_POL_MAT_CORE(__int128, degree, out, polynomial, matrix);
 }
 
 
 # if IS_TOEPLITZ_USABLE
+// Define a macro to compute the product of a polynomial with a Toeplitz matrix
 #define PROD_POL_MAT_TOEPLITZ_CORE(RETURN_TYPE, DEGREE, OUT, POLYNOMIAL, MATRIX_TOEPLITZ){               \
     for (int i = 0; i < DEGREE; i++) {                                                              \
         RETURN_TYPE acc = 0;                                                                        \
@@ -351,11 +362,13 @@ void prod_pol_mat_i128(int degree, __int128 out[degree], __int128 polynomial[deg
 
 
 void prod_pol_mat_toeplitz_i64(int degree, __int128 out[degree], const __int128 polynomial[degree], const uint64_t matrix_toeplitz[2*degree - 1]) {
+    // compute the product of an int128 polynomial with a uint64_t Toeplitz matrix mod 2^PHI_POW and store the result in an int128 polynomial
     PROD_POL_MAT_TOEPLITZ_CORE(int64_t, degree, out, polynomial, matrix_toeplitz);
 }
 
 
 void prod_pol_mat_toeplitz_i128(int degree, __int128 out[degree], const __int128 polynomial[degree], const int64_t matrix_toeplitz[2*degree - 1]) {
+    // compute the product of an int128 polynomial with an int64_t Toeplitz matrix and store the result in an int128 polynomial
     PROD_POL_MAT_TOEPLITZ_CORE(__int128, degree, out, polynomial, matrix_toeplitz);
 }
 
@@ -452,11 +465,13 @@ void prod_pol_mat_toeplitz_i128(int degree, __int128 out[degree], const __int128
 
 
 void prod_pol_mat_toeplitz_recursive_i64(int degree, __int128 out[degree], const __int128 vector[degree], const uint64_t toeplitz_matrix[2*degree - 1]){
+    // compute the product of an int128 polynomial with a uint64_t Toeplitz matrix mod 2^PHI_POW and store the result in an int128 polynomial using a recursive approach
     PROD_POL_MAT_TOEPLITZ_RECURSIVE_CORE(prod_pol_mat_toeplitz_recursive_i64, prod_pol_mat_toeplitz_i64, int64_t, uint64_t, degree, out, vector, toeplitz_matrix);
 }
 
 
 void prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], const __int128 vector[degree], const int64_t toeplitz_matrix[2*degree - 1]){
+    // compute the product of an int128 polynomial with an int64_t Toeplitz matrix and store the result in an int128 polynomial using a recursive approach
     PROD_POL_MAT_TOEPLITZ_RECURSIVE_CORE(prod_pol_mat_toeplitz_recursive_i128, prod_pol_mat_toeplitz_i128, __int128, int64_t, degree, out, vector, toeplitz_matrix);
 }
 # endif
@@ -464,6 +479,8 @@ void prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], cons
 
 #if IS_DOUBLE_SPARSE
 void prod_pol_mat_linear_i64(int extension_degree, int degree, int64_t out[degree], __int128 polynomial[degree]) {
+    /* compute the product of an int128 polynomial with a linear matrix and store the result in an int64_t polynomial
+    This function is specialized for the double sparse structure */
     for (int i=0; i<extension_degree; i++){
         __int128 coeff_1 = polynomial[i];
         __int128 coeff_2 = polynomial[i + extension_degree];
@@ -487,6 +504,9 @@ void prod_pol_mat_linear_i64(int extension_degree, int degree, int64_t out[degre
 }
 
 void prod_pol_mat_linear_i128(int extension_degree, int degree, __int128 out[degree], int64_t polynomial[degree]){
+    /* compute the product of an int64_t polynomial with a linear matrix and store the result in an int128 polynomial.
+     This function is specialized for the double sparse structure */
+
     for (int i=0; i<extension_degree; i++){
         __int128 coeff_1 = polynomial[i];
         __int128 coeff_2 = polynomial[i + extension_degree];

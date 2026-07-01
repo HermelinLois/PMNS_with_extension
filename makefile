@@ -68,7 +68,7 @@ all: $(TARGET_TEST_red) $(TARGET_TEST_conv) $(TARGET_TEST_libs)
 -include $(PMNS_STATE_FILE)
 
 
-
+# help target to display available targets and configurable variables
 help:
 	@printf "\n		PMNS Build System Help :\n"
 	@printf "		------------------------"
@@ -100,7 +100,7 @@ help:
 	@printf "  make new-tests NTESTS=100           # Generate 100 new tests values for current PMNS\n\n"
 
 
-
+# target to display current configuration used for PMNS generation and compilation
 show-config:
 	@printf "=================================================================\n"
 	@printf "|%18s%s%16s|\n" "" "PMNS GENERATION CONFIGURATION" ""
@@ -116,15 +116,15 @@ show-config:
 	@printf "| %-61s |\n" "LOAD PRECOMPUTE PMNS (LOAD) : $(SHOW_LOAD)"
 	@printf "=================================================================\n"
 
-
+# compile the reduction tests file with the generated PMNS parameters and source files
 $(TARGET_TEST_red): $(TEST_SRC_red) $(SRC_red) $(SRC_conv) $(SRC_ops) $(SRC_utils)
 	@$(CC) $(CFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) $(TEST_SRC_red) $(SRC_red) $(SRC_conv) $(SRC_ops) $(SRC_utils) $(LDFLAGS) -o $@
 
-
+# compile the conversion tests file with the generated PMNS parameters and source files
 $(TARGET_TEST_conv): $(TEST_SRC_conv) $(SRC_conv) $(SRC_red) $(SRC_ops) $(SRC_utils)
 	@$(CC) $(CFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) $(TEST_SRC_conv) $(SRC_conv) $(SRC_red) $(SRC_ops) $(SRC_utils) $(LDFLAGS) -o $@
 
-
+# compile the library tests file with the generated PMNS parameters and source files
 $(TARGET_TEST_libs): $(SRC_conv) $(SRC_red) $(SRC_ops) $(SRC_utils) $(TEST_DIR)/test_libraries_vs_pmns.cpp
 	@mkdir -p $(TMP_DIR)
 	@$(CC) $(CFLAGS) -I$(CODE_DIR) -c $(CODE_DIR)/reductions.c -o $(TMP_DIR)/reductions.o
@@ -135,6 +135,7 @@ $(TARGET_TEST_libs): $(SRC_conv) $(SRC_red) $(SRC_ops) $(SRC_utils) $(TEST_DIR)/
 	@$(CCplusplus) $(CplusplusFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) -I$(PARAMS_DIR) $(TEST_DIR)/test_libraries_vs_pmns.cpp $(TMP_DIR)/*.o $(LDFLAGS) -o $(TARGET_TEST_libs)
 	@rm -rf $(TMP_DIR)
 
+# target to generate PMNS parameters and tests values
 generate: show-config $(C_GEN)
 	@$(MAKE) clean --no-print-directory
 	@$(PyI) $(C_GEN) -ntests $(NTESTS) -nbits $(NBITS) -k $(K) -Etype $(ETYPE) $(NOPT_FLAG) --struct $(STRUCT) $(LOAD_FLAG)
@@ -145,15 +146,18 @@ generate: show-config $(C_GEN)
 	@printf 'PMNS_LAST_ETYPE := %s\n' '$(ETYPE)' >> $(PMNS_STATE_FILE)
 	@printf 'PMNS_LAST_STRUCT := %s\n' '$(STRUCT)' >> $(PMNS_STATE_FILE)
 
+# target to check if the PMNS state file exists, which is required for generating new tests
 check-state:
 	@test -f $(PMNS_STATE_FILE) || (printf "Missing $(PMNS_STATE_FILE). Run make generate first.\n" && exit 1)
 
+# target to generate new tests values based on the last generated PMNS parameters
 new-tests: check-state
 	@rm -f $(TARGET_TEST_red) $(TARGET_TEST_conv)
 	@$(PyI) $(C_GEN) -ntests $(NTESTS) -nbits $(PMNS_LAST_NBITS) -k $(PMNS_LAST_K) -Etype $(PMNS_LAST_ETYPE) --struct $(PMNS_LAST_STRUCT) --load --action new_values
 	@$(CC) $(CFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) $(TEST_SRC_red) $(SRC_red) $(SRC_conv) $(SRC_ops) $(SRC_utils) $(LDFLAGS) -o $(TARGET_TEST_red)
 	@$(CC) $(CFLAGS) -I$(TEST_DIR) -I$(CODE_DIR) $(TEST_SRC_conv) $(SRC_conv) $(SRC_red) $(SRC_ops) $(SRC_utils) $(LDFLAGS) -o $(TARGET_TEST_conv)
 
+# target to recompile the tests without regenerating the PMNS parameters
 recompile:
 	@rm -f $(TARGET_TEST_red) $(TARGET_TEST_conv) $(TARGET_TEST_libs)
 	@$(MAKE) $(TARGET_TEST_red) $(TARGET_TEST_conv) $(TARGET_TEST_libs) -o generate --no-print-directory
