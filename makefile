@@ -84,7 +84,7 @@ help:
 	@printf "  NBITS      - Prime bit size (default: $(NBITS))\n"
 	@printf "  K          - Extension degree (default: $(K))\n"
 	@printf "  ETYPE      - External polynomial form to use: 0 or 1 (default: $(ETYPE))\n"
-	@printf "  STRUCT     - Structure: generic, specific, sparse (default: $(STRUCT))\n"
+	@printf "  STRUCT     - Structure: generic, specific, dsparse (default: $(STRUCT))\n"
 	@printf "  NTESTS     - Number of tests (default: $(NTESTS))\n"
 	@printf "  OPT        - Compilation flags (default:$(OPT))\n"
 	@printf "  LOAD       - Load precomputed PMNS if it exists (use a flag) (default: False)\n"
