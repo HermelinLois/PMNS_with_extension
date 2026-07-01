@@ -51,7 +51,6 @@ static inline void pmns_format(int64_t poly_res[DEGREE], mp_limb_t a[EXTENSION_D
     convert_element_to_pmns_fast(poly_res, a);
 }
 
-
 static inline void flint_format(fq_t out, mp_limb_t a[EXTENSION_DEGREE][N_LIMBS]){
     fmpz_poly_t poly;
     fmpz_poly_init(poly);
@@ -75,7 +74,6 @@ static inline void flint_format(fq_t out, mp_limb_t a[EXTENSION_DEGREE][N_LIMBS]
     fmpz_poly_clear(poly);
 }
 
-
 static inline void ntl_format(ZZ_pE& out, mp_limb_t a[EXTENSION_DEGREE][N_LIMBS]){
     mpz_t coeff_mpz;
     mpz_init(coeff_mpz);
@@ -94,7 +92,6 @@ static inline void ntl_format(ZZ_pE& out, mp_limb_t a[EXTENSION_DEGREE][N_LIMBS]
     mpz_clear(coeff_mpz);
 }
 
-
 // ============================ OPERATIONS ===============================
 static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     __int128_t tmp[2 * DEGREE - 1];
@@ -102,14 +99,12 @@ static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGRE
     reduction_montgomery_int128(DEGREE, poly_res, tmp, L, L_INV);
 }
 
-
 #if IS_TOEPLITZ_USABLE
 static inline void pmns_toeplitz_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     __int128_t tmp[2 * DEGREE - 1];
     polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_toeplitz(DEGREE, poly_res, tmp, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
 }
-
 
 static inline void pmns_toeplitz_recursive_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     __int128_t tmp[2 * DEGREE - 1];
@@ -127,11 +122,9 @@ static inline void pmns_linear_operation(int64_t poly_res[DEGREE], int64_t poly_
 }
 #endif
 
-
 static inline void flint_operation(fq_t out, fq_t a, fq_t b){
     fq_mul(out, a, b, field);
 }
-
 
 static inline void ntl_operation(ZZ_pE& res, const ZZ_pE& a, const ZZ_pE& b){
     res = a * b;
@@ -141,6 +134,8 @@ static inline void ntl_operation(ZZ_pE& res, const ZZ_pE& a, const ZZ_pE& b){
 // =====================================================================
 //                             BENCHMARKS
 // =====================================================================
+
+// ======================= TEST VALUES GENERATION ======================
 static inline void gen_tests_pool(mp_limb_t pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state) {
 	for (int i = 0; i < N_BENCH_SAMPLES; i++) {
 		rand_field_element(EXTENSION_DEGREE, pool[i], state);
@@ -148,27 +143,24 @@ static inline void gen_tests_pool(mp_limb_t pool[2 * N_BENCH_SAMPLES][EXTENSION_
 	}
 }
 
-
-#define PMNS_BENCHMARKS_CORE(TEST_POOL, METHOD_NAME, FORMAT_FUNC, OPERATION_FUNC){		\
+// ======================== TESTS GENERATION ===========================
+#define BENCHMARKS_CORE(TEST_POOL, INIT_ELEMENTS, CLEAR_ELEMENTS, METHOD_NAME, FORMAT_FUNC, OPERATION_FUNC){		\
 	uint64_t *cycles = (uint64_t *)calloc(N_BENCH_TESTS,sizeof(uint64_t)), *statTimer;	\
 	uint64_t timermin , timermax, meanTimermin =0,	medianTimer = 0,meanTimermax = 0;	\
     uint64_t t1,t2, diff_t;																\
 																						\
-	int64_t poly_a[DEGREE], poly_b[DEGREE], poly_res[DEGREE];							\
+	INIT_ELEMENTS																		\
 																						\
 	for(int i=0;i<N_BENCH_TESTS; i++){													\
-		mp_limb_t (*a)[N_LIMBS] = TEST_POOL[i];											\
-        mp_limb_t (*b)[N_LIMBS] = TEST_POOL[i + N_BENCH_SAMPLES];						\
+        FORMAT_FUNC(obj_a, TEST_POOL[i]);												\
+        FORMAT_FUNC(obj_b, TEST_POOL[i + N_BENCH_SAMPLES]);							\
 																						\
-        FORMAT_FUNC(poly_a, a);															\
-        FORMAT_FUNC(poly_b, b);															\
-																						\
-        OPERATION_FUNC(poly_res, poly_a, poly_b);										\
+        OPERATION_FUNC(obj_res, obj_a, obj_b);										\
 	}																					\
 																						\
 	for(int i=0; i<N_BENCH_SAMPLES; i++){												\
-		FORMAT_FUNC(poly_a, TEST_POOL[i]);												\
-        FORMAT_FUNC(poly_b, TEST_POOL[i + N_BENCH_SAMPLES]);							\
+		FORMAT_FUNC(obj_a, TEST_POOL[i]);												\
+        FORMAT_FUNC(obj_b, TEST_POOL[i + N_BENCH_SAMPLES]);							\
 																						\
 		timermin = (uint64_t)0x1<<63;													\
 		timermax = 0;																	\
@@ -177,7 +169,7 @@ static inline void gen_tests_pool(mp_limb_t pool[2 * N_BENCH_SAMPLES][EXTENSION_
 																						\
 		for(int j=0;j<N_BENCH_TESTS;j++){												\
 			t1 = cpucyclesStart();														\
-			OPERATION_FUNC(poly_res, poly_a, poly_b);									\
+			OPERATION_FUNC(obj_res, obj_a, obj_b);										\
 			t2 = cpucyclesStop();														\
 																						\
 			diff_t = cycles_diff(t1, t2);												\
@@ -193,6 +185,7 @@ static inline void gen_tests_pool(mp_limb_t pool[2 * N_BENCH_SAMPLES][EXTENSION_
 		medianTimer += statTimer[1];													\
 		free(statTimer);																\
 	}																					\
+	CLEAR_ELEMENTS																		\
 	free(cycles);																		\
 																						\
     printf("====================================================\n");					\
@@ -204,162 +197,50 @@ static inline void gen_tests_pool(mp_limb_t pool[2 * N_BENCH_SAMPLES][EXTENSION_
     printf("====================================================\n");					\
 }
 
+// =================== PARAMETERS INITAILISATION AND CLEAR ===========================
+#define INIT_PMNS_ELEMENTS int64_t obj_a[DEGREE], obj_b[DEGREE], obj_res[DEGREE];
+#define INIT_NTL_ELEMENTS ZZ_pE obj_a, obj_b, obj_res;
+#define NO_ELEMENT_TO_CLEAR
+
+#define INIT_FLINT_ELEMENTS 	\
+    fq_t obj_a, obj_b, obj_res; \
+    fq_init(obj_a, field); 		\
+    fq_init(obj_b, field); 		\
+    fq_init(obj_res, field);
+
+#define CLEAR_FLINT_ELEMENTS 	\
+    fq_clear(obj_a, field); 	\
+    fq_clear(obj_b, field); 	\
+    fq_clear(obj_res, field);
+
+
+// ============================ BENCHMARKS DEFINITION =================================
 void do_pmns_generic_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
-	PMNS_BENCHMARKS_CORE(tests_pool, method_name, pmns_format, pmns_operation);
+	BENCHMARKS_CORE(tests_pool, INIT_PMNS_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, pmns_format, pmns_operation);
 }
 
 #if IS_TOEPLITZ_USABLE
 void do_pmns_toeplitz_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
-	PMNS_BENCHMARKS_CORE(tests_pool, method_name, pmns_format, pmns_toeplitz_operation);
+	BENCHMARKS_CORE(tests_pool, INIT_PMNS_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, pmns_format, pmns_toeplitz_operation);
 }
 
-
 void do_pmns_toeplitz_recursive_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
-	PMNS_BENCHMARKS_CORE(tests_pool, method_name, pmns_format, pmns_toeplitz_recursive_operation);
+	BENCHMARKS_CORE(tests_pool, INIT_PMNS_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, pmns_format, pmns_toeplitz_recursive_operation);
 }
 #endif
 
 #if IS_DOUBLE_SPARSE
 void do_pmns_linear_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
-	PMNS_BENCHMARKS_CORE(tests_pool, method_name, pmns_format, pmns_linear_operation);
+	BENCHMARKS_CORE(tests_pool, INIT_PMNS_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, pmns_format, pmns_linear_operation);
 }
 #endif
 
-
-
 void do_ntl_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
-    uint64_t *cycles = (uint64_t*)calloc(N_BENCH_TESTS, sizeof(uint64_t)), *statTimer;
-	uint64_t timermin, timermax, meanTimermin = 0, medianTimer = 0, meanTimermax = 0;
-	uint64_t t1, t2, diff_t;
-
-    ZZ_pE fa, fb, fres;
-
-	for (int i = 0; i < N_BENCH_TESTS; i++) {
-        mp_limb_t (*a)[N_LIMBS] = tests_pool[i];
-		mp_limb_t (*b)[N_LIMBS] = tests_pool[i + N_BENCH_SAMPLES];
-
-        ntl_format(fa, a);
-        ntl_format(fb, b);
-
-        ntl_operation(fres, fa, fb);
-    }
-
-	for (int i = 0; i < N_BENCH_SAMPLES; i++) {
-		mp_limb_t (*a)[N_LIMBS] = tests_pool[i];
-		mp_limb_t (*b)[N_LIMBS] = tests_pool[i + N_BENCH_SAMPLES];
-
-		ntl_format(fa, a);
-		ntl_format(fb, b);
-
-		timermin = (uint64_t)1ULL << 63;
-		timermax = 0;
-
-		memset(cycles, 0, N_BENCH_TESTS * sizeof(uint64_t));
-
-		for (int j = 0; j < N_BENCH_TESTS; j++) {
-			t1 = cpucyclesStart();
-			ntl_operation(fres, fa, fb);
-			t2 = cpucyclesStop();
-
-			diff_t = cycles_diff(t1, t2);
-			if (timermin > diff_t) timermin = diff_t;
-			if (timermax < diff_t) timermax = diff_t;
-			cycles[j] = diff_t;
-		}
-
-		meanTimermin += timermin;
-		meanTimermax += timermax;
-		statTimer = quartiles(cycles, N_BENCH_TESTS);
-
-		medianTimer += statTimer[1];
-		free(statTimer);
-	}
-
-	free(cycles);
-
-	printf("====================================================\n");
-	printf("|%*s%*s|\n", 25 + (int)(strlen(method_name) / 2), method_name, 25 - (int)(strlen(method_name) / 2), "");
-	printf("====================================================\n");
-	printf("| %-20s : %-26llu|\n", "Mean Minimum cycles", (unsigned long long)(meanTimermin / N_BENCH_SAMPLES));
-	printf("| %-20s : %-26llu|\n", "Median cycles", (unsigned long long)(medianTimer / N_BENCH_SAMPLES));
-	printf("| %-20s : %-26llu|\n", "Mean Maximum cycles", (unsigned long long)(meanTimermax / N_BENCH_SAMPLES));
-	printf("====================================================\n");
+    BENCHMARKS_CORE(tests_pool, INIT_NTL_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, ntl_format, ntl_operation);
 }
 
-
 void do_flint_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
-	uint64_t *cycles = (uint64_t *)calloc(N_BENCH_TESTS,sizeof(uint64_t)), *statTimer;
-	uint64_t timermin , timermax, meanTimermin =0,	medianTimer = 0,meanTimermax = 0;
-    uint64_t t1,t2, diff_t;
-
-    fq_t fa, fb, fres;
-
-    fq_init(fa, field);
-    fq_init(fb, field);
-    fq_init(fres, field);
-
-    for(int i=0;i<N_BENCH_TESTS;i++){
-		mp_limb_t (*a)[N_LIMBS] = tests_pool[i];
-        mp_limb_t (*b)[N_LIMBS] = tests_pool[i + N_BENCH_SAMPLES];
-
-        flint_format(fa, a);
-        flint_format(fb, b);
-        
-        flint_operation(fres, fa, fb);
-	}
-
-    fq_clear(fa, field);
-    fq_clear(fb, field);
-    fq_clear(fres, field);
-
-
-	for(int i=0;i<N_BENCH_SAMPLES;i++){
-		mp_limb_t (*a)[N_LIMBS] = tests_pool[i];
-        mp_limb_t (*b)[N_LIMBS] = tests_pool[i + N_BENCH_SAMPLES];
-
-        fq_init(fa, field);
-        fq_init(fb, field);
-        fq_init(fres, field);
-
-        flint_format(fa, a);
-        flint_format(fb, b);
-
-		timermin = (uint64_t)0x1<<63;
-		timermax = 0;
-        
-		memset(cycles, 0, N_BENCH_TESTS*sizeof(uint64_t));
-
-		for(int j=0;j<N_BENCH_TESTS;j++){
-			t1 = cpucyclesStart();
-			flint_operation(fres, fa, fb);
-			t2 = cpucyclesStop();
-
-			diff_t = cycles_diff(t1, t2);
-			if(timermin > diff_t) timermin = diff_t;
-			if(timermax < diff_t) timermax = diff_t;
-			cycles[j]=diff_t;
-		}
-        fq_clear(fa, field);
-        fq_clear(fb, field);
-        fq_clear(fres, field);
-        
-		meanTimermin += timermin;
-		meanTimermax += timermax;
-		statTimer = quartiles(cycles,N_BENCH_TESTS);
-		
-		medianTimer += statTimer[1];
-		free(statTimer);
-	}
-	
-	free(cycles);
-
-    printf("====================================================\n");
-    printf("|%*s%*s|\n", 25 + (int)(strlen(method_name)/2), method_name, 25 - (int)(strlen(method_name)/2), "");
-    printf("====================================================\n");
-    printf("| %-20s : %-26llu|\n", "Mean Minimum cycles", (unsigned long long)(meanTimermin/N_BENCH_SAMPLES));
-    printf("| %-20s : %-26llu|\n", "Median cycles", (unsigned long long)(medianTimer/N_BENCH_SAMPLES));
-    printf("| %-20s : %-26llu|\n", "Mean Maximum cycles", (unsigned long long)(meanTimermax/N_BENCH_SAMPLES));
-    printf("====================================================\n");
+	BENCHMARKS_CORE(tests_pool, INIT_FLINT_ELEMENTS, CLEAR_FLINT_ELEMENTS, method_name, flint_format, flint_operation);
 }
 
 // =====================================================================
