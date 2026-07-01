@@ -57,11 +57,11 @@ def write_conversions_values(env, n_test:int, container:PMNSContainer) -> list:
 def write_reduction_values(env, n_test, container, convs_pool) -> None:  
     E = container.get('E')
     PR = PolynomialRing(ZZ,"X")
-    L = container.get('L_origin')
-    L_inv = container.get('L_inv_origin')
+    L = container.get('L')
+    L_inv = container.get('L_inv')
 
-    mat_M = container.get('M_mat_origin')
-    mat_N = container.get('N_mat_origin')
+    mat_M = container.get('M_mat')
+    mat_N = container.get('N_mat')
     struct = container.get('struct')
     
     polynomials_a = []

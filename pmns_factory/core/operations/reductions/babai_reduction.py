@@ -95,8 +95,8 @@ def babai_rounding_limited_reduction(pol_p, container):
     n = container.get('n')
     h1 = container.get('h1')
     h2 = container.get('h2')
-    L = container.get('L_origin')
-    L_inv_babai = container.get('L_inv_babai_origin')
+    L = container.get('L')
+    L_inv_babai = container.get('L_inv_babai')
     gamma = container.get('gamma')
     
     resize_vect = pol_p.list() + [0]*(n - len(pol_p.list()))

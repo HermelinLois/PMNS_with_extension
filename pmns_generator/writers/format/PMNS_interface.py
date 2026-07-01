@@ -160,7 +160,7 @@ class PMNSBuilder:
         return container
 
     def _get_reduction_bounds(self, container: PMNSContainer, theta_pow: int) -> Tuple[int, int, int]:
-        L = container.get('L_origin')
+        L = container.get('L')
         pol_e = container.get('E')
         phi = 2 ** container.get('phi_pow')
         rho = container.get('rho')
@@ -188,28 +188,21 @@ class PMNSBuilder:
         phi = 2 ** phi_pow
         
         m_space = container.data.matrices
-        m_space['L'] = _ensure_list(L)
-        m_space['L_origin'] = L
-
         L_inv = -L.inverse() % phi
-        m_space['L_inv'] = _ensure_list(L_inv)
-        m_space['L_inv_origin'] = L_inv
+        m_space['L_inv'] = L_inv
 
         external_mat_red = block_matrix([[gen_overflow_matrix(E)], [matrix(1, n)]])
-        m_space['ext_red_mat'] = _ensure_list(external_mat_red)
+        m_space['ext_red_mat'] = external_mat_red
         
         M = search_polynomial_m(L, k, p, gamma, E, sparse=container.data.is_double_sparse)
         M_mat, N_mat = gen_mn_reduction_matrix(M, E, phi)
-        m_space['M_mat'] = _ensure_list(M_mat)
-        m_space['M_mat_origin'] = M_mat
-        m_space['N_mat'] = _ensure_list(N_mat)
-        m_space['N_mat_origin'] = N_mat
-        m_space['toeplitz_mat_m'] = _ensure_list(gen_toeplitz_representation(M_mat))
-        m_space['toeplitz_mat_n'] = _ensure_list(gen_toeplitz_representation(N_mat))
+        m_space['M_mat'] =  M_mat
+        m_space['N_mat'] = N_mat
+        m_space['toeplitz_mat_m'] = gen_toeplitz_representation(M_mat)
+        m_space['toeplitz_mat_n'] = gen_toeplitz_representation(N_mat)
 
         T_mat = gen_transition_matrix(gamma, k)
-        m_space['T_mat'] = _ensure_list(T_mat)
-        m_space['T_mat_origin'] = T_mat
+        m_space['T_mat'] = T_mat
 
     def _compute_reduction_parameters(self, container: PMNSContainer) -> None:
         E = container.get('E')
@@ -236,7 +229,7 @@ class PMNSBuilder:
             r_space['gamma_pow_n_lambdda_mod'] = prod if prod <= phi // 2 else prod - phi
         
         if container.data.is_babai_usable:
-            L = container.get('L_origin')
+            L = container.get('L')
             rho = container.get('rho')
 
             result = gen_params_for_babai(L, phi_pow, rho, E)
@@ -247,8 +240,7 @@ class PMNSBuilder:
             h1, h2, L_inv_babai = result
             r_space['h1'] = h1
             r_space['h2'] = h2
-            r_space['L_inv_babai'] = _ensure_list(L_inv_babai)
-            r_space['L_inv_babai_origin'] = L_inv_babai
+            r_space['L_inv_babai'] = L_inv_babai
 
     def _compute_conversions_parameters(self, container: PMNSContainer) -> None:
         c_space = container.data.conversions

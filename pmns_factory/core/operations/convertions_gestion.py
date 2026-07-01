@@ -51,7 +51,7 @@ def convert_element_to_polynomial(element, gamma, transition_matrix: matrix):
 def montgomery_pseudo_fast_conversion(element, container):
     k = container.get('k')
     E = container.get('E')
-    L, L_inv =container.get('L_origin'), container.get('L_inv_origin')
+    L, L_inv =container.get('L'), container.get('L_inv')
     theta_pow = container.get('theta_pow')
     phi = 2**container.get('phi_pow')
     mask = (1<<theta_pow) - 1 
@@ -85,7 +85,7 @@ def montgomery_pseudo_fast_conversion(element, container):
 
 def montgomery_fast_conversion(element, container):
     k = container.get('k')
-    L, L_inv =container.get('L_origin'), container.get('L_inv_origin')
+    L, L_inv =container.get('L'), container.get('L_inv')
     theta_pow = container.get('theta_pow')
     pols = container.get('fast_pols')
     phi = 2**container.get('phi_pow')
@@ -126,9 +126,9 @@ def montgomery_exact_conversion(element, container, add_red=0):
     phi_pow = container.get('phi_pow')
     gamma = container.get('gamma')
     rho = container.get('rho')
-    L = container.get('L_origin')
-    L_inv = container.get('L_inv_origin')
-    transition_matrix = container.get('T_mat_origin')
+    L = container.get('L')
+    L_inv = container.get('L_inv')
+    transition_matrix = container.get('T_mat')
     
     phi = 2**phi_pow
     nb_iteration = container.get('n_red_exact') + add_red
