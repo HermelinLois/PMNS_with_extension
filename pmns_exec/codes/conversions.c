@@ -56,6 +56,9 @@ static inline void init_element_times_phipow(int extension_degree, int degree, m
 static inline void element_change_basis(int extension_degree, int degree, mpz_t out[degree], mpz_t extension_element[degree]){
     // compute the product of the given element with the transition matrix and apply modulus p to the result
     // with our implementation, element are express in gamma basis, no need to convert element
+    mpz_t vector[DEGREE];
+    for (int deg=0; deg<DEGREE; deg++) mpz_init(vector[deg]);
+
     mpz_t acc, coeff, prime, tmp;
     mpz_inits(acc, coeff, prime, tmp, NULL);
     mpz_import(prime, N_LIMBS, -1, sizeof(mp_limb_t), 0, 0, P);
@@ -68,9 +71,14 @@ static inline void element_change_basis(int extension_degree, int degree, mpz_t 
             mpz_mul(coeff, extension_element[i], coeff);
             mpz_add(tmp, tmp, coeff);
         }
-        mpz_mod(out[j], tmp, prime);
+        mpz_mod(vector[j], tmp, prime);
     }
     mpz_clears(acc, coeff, prime, tmp, NULL);
+
+    for (int deg=0; deg<degree; deg++) {
+        mpz_set(out[deg], vector[deg]);
+        mpz_clear(vector[deg]);
+    }
 }
 # endif
 
@@ -86,22 +94,16 @@ void convert_element_to_pmns_exact(int extension_degree, int degree, int64_t out
     init_element_times_phipow(extension_degree, degree, vector, element_data, N_INT_RED_CLASSICAL);
 
     # if !IS_ELEMENTS_IN_GAMMA_BASIS
-    mpz_t intermediate_vector[degree];
-    for (int deg=0; deg<degree; deg++) mpz_init(intermediate_vector[deg]);
-
-    element_change_basis(extension_degree, degree, intermediate_vector, vector);
-
-    for (int deg=0; deg<degree; deg++) {
-        mpz_set(vector[deg], intermediate_vector[deg]);
-        mpz_clear(intermediate_vector[deg]);
-    }
+    element_change_basis(extension_degree, degree, vector, vector);
     # endif
+
     for (int i=0; i<N_INT_RED_CLASSICAL; i++)
         reduction_montgomery_mpz(degree, vector, vector, L, L_INV);
 
     for (int deg=0; deg<degree; deg++)
         out[deg] = mpz_get_si(vector[deg]);
 }
+
 
 
 void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t out[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]){
