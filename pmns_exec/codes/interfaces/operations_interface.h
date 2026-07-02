@@ -32,7 +32,7 @@ void addmul_polmpn_pol64(int degree, int n_limbs, mp_limb_t out[degree][n_limbs]
 
 void recursive_karatsuba_product(int degree, __int128 out[2 * degree - 1], int64_t pol_A[degree], int64_t pol_B[degree]);
 
-void polynomials_product(int degree, __int128 out[2 * degree - 1], int64_t PolA[degree], int64_t PolB[degree]);
+void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree], int64_t PolB[degree]);
 
 #if IS_TOEPLITZ_USABLE
 void addmul_polmpn_Xpow_modE(int degree, int n_limbs, mp_limb_t out[degree][n_limbs], mp_limb_t polmpn[degree][n_limbs], unsigned int pow);

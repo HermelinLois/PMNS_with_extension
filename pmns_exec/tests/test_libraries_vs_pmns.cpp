@@ -99,7 +99,7 @@ static inline void ntl_format(ZZ_pE& out, mp_limb_t a[EXTENSION_DEGREE][N_LIMBS]
 static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
-    __int128_t tmp[2 * DEGREE - 1];
+    __int128_t tmp[DEGREE];
     polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_int128(DEGREE, poly_res, tmp, L, L_INV);
 }
@@ -108,7 +108,7 @@ static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGRE
 static inline void pmns_toeplitz_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
-    __int128_t tmp[2 * DEGREE - 1];
+    __int128_t tmp[DEGREE];
     polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_toeplitz(DEGREE, poly_res, tmp, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
 }
@@ -126,7 +126,7 @@ static inline void pmns_toeplitz_recursive_operation(int64_t poly_res[DEGREE], i
 static inline void pmns_linear_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
-    __int128_t tmp[2 * DEGREE - 1];
+    __int128_t tmp[DEGREE];
     polynomials_product(DEGREE, tmp, poly_a, poly_b);
     reduction_montgomery_linear(EXTENSION_DEGREE, DEGREE, poly_res, tmp);
 }

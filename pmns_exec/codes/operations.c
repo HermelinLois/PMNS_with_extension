@@ -148,7 +148,7 @@ void recursive_karatsuba_product(int degree, __int128 out[2 * degree - 1], int64
 }
 
 
-void polynomials_product(int degree, __int128 out[2 * degree - 1], int64_t PolA[degree], int64_t PolB[degree]){
+void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree], int64_t PolB[degree]){
     int PROD_SIZE = 2 * degree - 1;
     __int128 P[PROD_SIZE];
 
