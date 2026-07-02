@@ -18,7 +18,7 @@ from pmns_factory.core.operations.reductions.babai_reduction import gen_params_f
 from pmns_factory.core.operations.reductions.montgomery_reduction import gen_mn_reduction_matrix, search_polynomial_m
 from pmns_factory.core.parameters.matrix_gestion import gen_overflow_matrix, gen_toeplitz_representation
 from pmns_factory.core.parameters.params_gestion import search_memory_overhead
-from config import STRUCT_SPARSE, STRUCT_GENERIC
+from config import STRUCT_SPARSE, STRUCT_GENERIC, ETYPE0, ETYPE1
 
 # =====================================================================
 #                           DATA STRUCTURES
@@ -56,6 +56,10 @@ class PMNSContainer:
     It allows retrieval of parameters in their raw form or formatted for specific use cases.
     And it also provides methods to save and load the container state.
     """
+
+    type0 = ETYPE0
+    type1 = ETYPE1
+    
     def __init__(self, data: PMNSData) -> None:
         self.data = data
 
@@ -146,6 +150,7 @@ class PMNSBuilder:
     Compute and build PMNS parameters and matrices based on the provided PMNS data.
     This class encapsulates the logic for computing matrices, reduction parameters, and conversion parameters.
     """
+
     def __init__(self, Etype: int, pmns: dict, structure: str=STRUCT_GENERIC) -> None:
         self.etype = Etype
         self.pmns = pmns

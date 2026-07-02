@@ -9,7 +9,7 @@
 /*=================================================================
                 FUNCTIONS OVER POLYNOMIALS COEFFICIENTS
 =================================================================*/
-#if IS_BABAI_USABLE
+# if IS_BABAI_USABLE
 # define COEFF_SHIFT_CORE(RETURN_TYPE, DEGREE, OUT, POLYNOMIAL, N_SHIFT){    \
     for (int i=0; i<DEGREE; i++)                                        \
         OUT[i] = (RETURN_TYPE)(POLYNOMIAL[i] >> N_SHIFT);               \
@@ -157,7 +157,7 @@ void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree],
     // Directly copy the first degree coefficients to the output polynomial
     for (int i = 0; i < degree; i++) out[i] = P[i];
 
-    #if IS_TOEPLITZ_USABLE
+    # if IS_E_BINOMIAL
     // With this condition, we know our external reduction matrix as a form X^n - lambda, 
     // so we can optimize the external reduction by using the first column of the matrix and 
     // avoid unnecessary multiplications by directly extracting diagonal elements for external reduction.
@@ -180,7 +180,7 @@ void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree],
     #endif
 }
 
-#if IS_TOEPLITZ_USABLE
+# if IS_ELEMENTS_IN_GAMMA_BASIS
 // /!\ this function only works if E = X^n - lambda
 // multiply polynomial by X^pow and apply external reduction if needed, then add the result to out polynomial    
 void addmul_polmpn_Xpow_modE(int degree, int n_limbs, mp_limb_t out[degree][n_limbs], mp_limb_t polmpn[degree][n_limbs], unsigned int pow) {
@@ -475,7 +475,7 @@ void prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], cons
 # endif
 
 
-#if IS_DOUBLE_SPARSE
+# if IS_DOUBLE_SPARSE
 void prod_pol_mat_linear_i64(int extension_degree, int degree, int64_t out[degree], __int128 polynomial[degree]) {
     /* compute the product of an int128 polynomial with a linear matrix and store the result in an int64_t polynomial
     This function is specialized for the double sparse structure */

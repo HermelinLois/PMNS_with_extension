@@ -27,17 +27,17 @@ void test_equality(){
         reduction_montgomery_int128(DEGREE, out, polynomial, L, L_INV);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery");
 
-        #if IS_DOUBLE_SPARSE
+        # if IS_DOUBLE_SPARSE
         reduction_montgomery_linear(EXTENSION_DEGREE, DEGREE, out, polynomial);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery linear");
         #endif
 
-        #if IS_BABAI_USABLE
+        # if IS_BABAI_USABLE
         reduction_babai_int128(DEGREE, out, polynomial, L, L_INV_BABAI);
         check_equality(DEGREE, out, BABAI_PROD_RED[idx], "Babai");
         #endif
 
-        #if IS_TOEPLITZ_USABLE
+        # if IS_TOEPLITZ_USABLE
         reduction_montgomery_toeplitz(DEGREE, out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz");
 
