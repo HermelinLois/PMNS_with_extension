@@ -11,6 +11,10 @@
 # define PHI_POW {{ container.get('phi_pow') }}
 # define P_SIZE {{ container.get('p').nbits() }}
 # define N_TESTS {{ n_test }}
+{% if container.etype == 0 %}# define LAMBDA {{ -container.get('E')[0] }}
+{%else%}# define ALPHA {{ -container.get('E')[container.get('k')] }}
+# define BETA {{ -container.get('E')[0] }}
+{%endif%}
 
 # define IS_TOEPLITZ_USABLE {{ 1 if container.data.is_toeplitz_usable else 0 }}
 # define IS_BABAI_USABLE {{ 1 if container.data.is_babai_usable else 0 }}

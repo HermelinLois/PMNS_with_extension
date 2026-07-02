@@ -161,12 +161,11 @@ void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree],
     // With this condition, we know our external reduction matrix as a form X^n - lambda, 
     // so we can optimize the external reduction by using the first column of the matrix and 
     // avoid unnecessary multiplications by directly extracting diagonal elements for external reduction.
-    int64_t lambda = EXT_MAT[0][0];
     for (int j = degree; j < PROD_SIZE; j++) {
         __int128 p_val = P[j];
         if (p_val == 0) continue;
 
-        out[j-degree] += P[j] * (__int128)lambda;
+        out[j-degree] += P[j] * (__int128)LAMBDA;
     }
     #else
     // Apply generic external reduction using the external reduction matrix for the remaining coefficients
@@ -186,9 +185,8 @@ void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree],
 // multiply polynomial by X^pow and apply external reduction if needed, then add the result to out polynomial    
 void addmul_polmpn_Xpow_modE(int degree, int n_limbs, mp_limb_t out[degree][n_limbs], mp_limb_t polmpn[degree][n_limbs], unsigned int pow) {
     // extract lambda from the external reduction matrix for the given power
-    const int64_t lambda = EXT_MAT[0][0];
-    const int lambda_sign = (lambda < 0);
-    const uint64_t abs_lambda = lambda_sign ? (uint64_t)(-lambda) : (uint64_t)lambda;
+    const int lambda_sign = (LAMBDA < 0);
+    const uint64_t abs_lambda = lambda_sign ? (uint64_t)(-LAMBDA) : (uint64_t)LAMBDA;
 
     // multiply by X^pow consist on a register shift, then multiply coefficients by lambda to apply external reduction if needed
     // the result is added to the output polynomial. We use complement to 2 representation for negative values and directly apply
