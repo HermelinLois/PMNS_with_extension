@@ -85,10 +85,17 @@ void convert_element_to_pmns_exact(int extension_degree, int degree, int64_t out
     
     init_element_times_phipow(extension_degree, degree, vector, element_data, N_INT_RED_CLASSICAL);
 
-# if !IS_ELEMENTS_IN_GAMMA_BASIS
-    element_change_basis(extension_degree, degree, vector, vector);
-# endif
+    # if !IS_ELEMENTS_IN_GAMMA_BASIS
+    mpz_t intermediate_vector[degree];
+    for (int deg=0; deg<degree; deg++) mpz_init(intermediate_vector[deg]);
 
+    element_change_basis(extension_degree, degree, intermediate_vector, vector);
+
+    for (int deg=0; deg<degree; deg++) {
+        mpz_set(vector[deg], intermediate_vector[deg]);
+        mpz_clear(intermediate_vector[deg]);
+    }
+    # endif
     for (int i=0; i<N_INT_RED_CLASSICAL; i++)
         reduction_montgomery_mpz(degree, vector, vector, L, L_INV);
 
