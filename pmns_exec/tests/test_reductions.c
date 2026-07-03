@@ -21,7 +21,7 @@ void test_equality(){
     for (int idx=0; idx<N_TESTS; idx++){
         for (int i=0; i<DEGREE; i++) out[i] = 0;
         // compute the polynomial product without internal reduction
-        polynomials_product(DEGREE, polynomial, POL_A[idx], POL_B[idx]);
+        polynomials_product(polynomial, POL_A[idx], POL_B[idx]);
 
         // compute different reductions and compare the result to the expected values
         reduction_montgomery_int128(DEGREE, out, polynomial, L, L_INV);

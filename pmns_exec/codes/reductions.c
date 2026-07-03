@@ -14,10 +14,10 @@ void reduction_babai_int128(int degree, int64_t out[degree], __int128 polynomial
     __int128 SL[degree];
     __int128 PH2[degree];
 
-    coeff_shift_i64(degree, PH2, polynomial, H2);
-    prod_pol_mat_i128(degree, S, PH2, sublattice_inv);
-    coeff_shift_i128(degree, S, S, (H1 - H2));
-    prod_pol_mat_i64(degree, SL, S, sublattice);
+    coeff_shift_i64(PH2, polynomial, H2);
+    prod_pol_mat_i128(S, PH2, sublattice_inv);
+    coeff_shift_i128(S, S, (H1 - H2));
+    prod_pol_mat_i64(SL, S, sublattice);
 
     for (int i = 0; i < degree; i++)
         out[i] = polynomial[i] - SL[i];
@@ -33,8 +33,8 @@ void reduction_babai_int128(int degree, int64_t out[degree], __int128 polynomial
     Q_TYPE Q[DEGREE];                                                                                                               \
     T_TYPE T[DEGREE];                                                                                                               \
                                                                                                                                     \
-    PRODUCT_FUNC64(DEGREE, Q, POLYNOMIAL, LATTICE_INV);                                                                             \
-    PRODUCT_FUNC128(DEGREE, T, Q, LATTICE);                                                                                         \
+    PRODUCT_FUNC64(Q, POLYNOMIAL, LATTICE_INV);                                                                             \
+    PRODUCT_FUNC128(T, Q, LATTICE);                                                                                         \
                                                                                                                                     \
     for (int deg = 0; deg < DEGREE; deg++)                                                                                          \
         OUT[deg] = (T[deg] + POLYNOMIAL[deg]) >> 64;                                                
@@ -96,8 +96,8 @@ void reduction_montgomery_mpz(int degree, mpz_t out[degree], mpz_t polynomial[de
     mpz_init(tmp);
     init_phi(phi);
 
-    prod_polmpz_mat_i64(degree, Q, polynomial, sublattice_inv, phi);
-    prod_pol_mat_mpz(degree, T, Q, sublattice);
+    prod_polmpz_mat_i64(Q, polynomial, sublattice_inv, phi);
+    prod_pol_mat_mpz(T, Q, sublattice);
 
     // add the polynomials and divide by phi to get the final result
     for (int deg = 0; deg < degree; deg++) {
@@ -118,8 +118,8 @@ void reduction_montgomery_mpn(int n_limbs, int degree, mp_limb_t out[degree][n_l
     int64_t Q[degree];
     mp_limb_t T[degree][SIZE];
 
-    prod_polmpn_mat_i64(degree, n_limbs, Q, pol, sublattice_inv);
-    prod_pol_mat_mpn(degree, n_limbs, T, Q, sublattice);
+    prod_polmpn_mat_i64(n_limbs, Q, pol, sublattice_inv);
+    prod_pol_mat_mpn(n_limbs, T, Q, sublattice);
 
     // Do a register shift after the add as PHI_POW is equal to the size of a limb in the current implementation
     mp_limb_t tmp[SIZE];

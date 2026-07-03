@@ -21,7 +21,7 @@ void rand_field_element(int extension_degree, mp_limb_t (*a)[N_LIMBS], gmp_rands
 
 void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t *out, const mp_limb_t (*element_data)[N_LIMBS]);
 
-void polynomials_product(int degree, __int128 *out, const int64_t *PolA, const int64_t *PolB);
+void polynomials_product(__int128 *out, const int64_t *PolA, const int64_t *PolB);
 
 void reduction_montgomery_int128(int degree, int64_t *out, __int128 *polynomial, const int64_t (*sublattice)[], const int64_t (*sublattice_inv)[]);
 
@@ -100,7 +100,7 @@ static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGRE
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
     __int128_t tmp[DEGREE];
-    polynomials_product(DEGREE, tmp, poly_a, poly_b);
+    polynomials_product(tmp, poly_a, poly_b);
     reduction_montgomery_int128(DEGREE, poly_res, tmp, L, L_INV);
 }
 
@@ -109,7 +109,7 @@ static inline void pmns_toeplitz_operation(int64_t poly_res[DEGREE], int64_t pol
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
     __int128_t tmp[DEGREE];
-    polynomials_product(DEGREE, tmp, poly_a, poly_b);
+    polynomials_product(tmp, poly_a, poly_b);
     reduction_montgomery_toeplitz(DEGREE, poly_res, tmp, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
 }
 
@@ -117,7 +117,7 @@ static inline void pmns_toeplitz_recursive_operation(int64_t poly_res[DEGREE], i
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
     __int128_t tmp[2 * DEGREE - 1];
-    polynomials_product(DEGREE, tmp, poly_a, poly_b);
+    polynomials_product(tmp, poly_a, poly_b);
     reduction_montgomery_toeplitz_recursive(DEGREE, poly_res, tmp, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
 }
 #endif
