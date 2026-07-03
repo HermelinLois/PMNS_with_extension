@@ -24,7 +24,7 @@ void test_equality(){
         polynomials_product(polynomial, POL_A[idx], POL_B[idx]);
 
         // compute different reductions and compare the result to the expected values
-        reduction_montgomery_int128(DEGREE, out, polynomial, L, L_INV);
+        reduction_montgomery_lattice(DEGREE, out, polynomial, L, L_INV);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery");
 
         # if IS_DOUBLE_SPARSE
@@ -33,7 +33,7 @@ void test_equality(){
         #endif
 
         # if IS_BABAI_USABLE
-        reduction_babai_int128(DEGREE, out, polynomial, L, L_INV_BABAI);
+        reduction_babai(DEGREE, out, polynomial, L, L_INV_BABAI);
         check_equality(DEGREE, out, BABAI_PROD_RED[idx], "Babai");
         #endif
 

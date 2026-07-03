@@ -119,7 +119,7 @@ void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t out[
             addmul_pol64_int64(polynomial, PMNS_THETA_FAST[deg][i], part);
         }
     }
-    reduction_montgomery_int128(degree, out, polynomial, L, L_INV);
+    reduction_montgomery_lattice(degree, out, polynomial, L, L_INV);
 }
 
 

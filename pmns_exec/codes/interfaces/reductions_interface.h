@@ -15,13 +15,13 @@
                         BABAI REDUCTION FUNCTION 
 =================================================================*/
 # if IS_BABAI_USABLE
-void reduction_babai_int128(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]);
+void reduction_babai(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]);
 # endif
 
 /*=================================================================
                     MONTGOMERY REDUCTION FUNCTION 
 =================================================================*/
-void reduction_montgomery_int128(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]);
+void reduction_montgomery_lattice(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]);
 
 # if IS_TOEPLITZ_USABLE
 void reduction_montgomery_toeplitz(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[2*degree - 1], const uint64_t sublattice_inv[2*degree - 1]);

@@ -23,7 +23,7 @@ void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t *out
 
 void polynomials_product(__int128 *out, const int64_t *PolA, const int64_t *PolB);
 
-void reduction_montgomery_int128(int degree, int64_t *out, __int128 *polynomial, const int64_t (*sublattice)[], const int64_t (*sublattice_inv)[]);
+void reduction_montgomery_lattice(int degree, int64_t *out, __int128 *polynomial, const int64_t (*sublattice)[], const int64_t (*sublattice_inv)[]);
 
 # if IS_TOEPLITZ_USABLE
 void reduction_montgomery_toeplitz(int degree, int64_t *out, __int128 *polynomial, const int64_t *sublattice, const uint64_t *sublattice_inv);
@@ -101,7 +101,7 @@ static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGRE
      followed by reduction in the PMNS representation.*/
     __int128_t tmp[DEGREE];
     polynomials_product(tmp, poly_a, poly_b);
-    reduction_montgomery_int128(DEGREE, poly_res, tmp, L, L_INV);
+    reduction_montgomery_lattice(DEGREE, poly_res, tmp, L, L_INV);
 }
 
 # if IS_TOEPLITZ_USABLE

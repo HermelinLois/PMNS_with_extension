@@ -8,7 +8,7 @@
                         BABAI REDUCTION FUNCTION 
 =================================================================*/
 # if IS_BABAI_USABLE
-void reduction_babai_int128(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]) {
+void reduction_babai(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]) {
     /*Define the Babai internal reduction approach*/
     __int128 S[degree];
     __int128 SL[degree];
@@ -40,7 +40,7 @@ void reduction_babai_int128(int degree, int64_t out[degree], __int128 polynomial
         OUT[deg] = (T[deg] + POLYNOMIAL[deg]) >> 64;                                                
 
 
-void reduction_montgomery_int128(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]) {
+void reduction_montgomery_lattice(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]) {
     /*Define the Montgomery internal reduction approach with the multiplication of the polynomial and sublattices*/
     MONTGOMERY_REDUCTION_CORE(__int128, __int128, degree, prod_pol_mat_i64, prod_pol_mat_i128, out, polynomial, sublattice, sublattice_inv);
 }
