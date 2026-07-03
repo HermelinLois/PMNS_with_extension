@@ -7,7 +7,7 @@
 /*=================================================================
                         BABAI REDUCTION FUNCTION 
 =================================================================*/
-# if IS_BABAI_USABLE
+# if BABAI_IS_USABLE
 void reduction_babai(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]) {
     /*Define the Babai internal reduction approach*/
     __int128 S[DEGREE];
@@ -41,7 +41,7 @@ void reduction_montgomery_lattice(int64_t out[DEGREE], __int128 polynomial[DEGRE
 }
 
 
-# if IS_TOEPLITZ_USABLE
+# if TOEPLITZ_IS_USABLE
 void reduction_montgomery_toeplitz(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2*DEGREE - 1], const uint64_t sublattice_inv[2*DEGREE - 1]) {
     /*Define the Montgomery Toeplitz internal reduction approach using the Toeplitz structure*/
     __int128 Q[DEGREE];
@@ -68,7 +68,7 @@ void reduction_montgomery_toeplitz_recursive(int64_t out[DEGREE], __int128 polyn
 # endif
 
 
-# if IS_DOUBLE_SPARSE
+# if LATTICE_IS_DOUBLE_SPARSE
 void reduction_montgomery_linear(int64_t out[DEGREE], __int128 polynomial[DEGREE]) {
     /*Define the Montgomery internal reduction approach by using the double sparse structure of the sublattice and its inverse.
     This approach is more efficient than the previous ones, as it takes advantage of the sparsity of the sublattice and its inverse to 

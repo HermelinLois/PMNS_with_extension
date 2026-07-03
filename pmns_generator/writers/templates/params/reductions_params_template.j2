@@ -13,19 +13,19 @@ static const int64_t MAT_M [DEGREE][DEGREE] = {{ container.get('M_mat', True) }}
 
 static const int64_t MAT_N [DEGREE][DEGREE] = {{ container.get('N_mat', True) }};
 
-# if IS_TOEPLITZ_USABLE
+{% if container.data.toeplitz_is_usable %}
 static const int64_t TOEPLITZ_MAT_M [2*DEGREE - 1] = {{ container.get('toeplitz_mat_m', True) }};
 
 static const uint64_t TOEPLITZ_MAT_N [2*DEGREE - 1] = {{ container.get('toeplitz_mat_n', True) }};
-# endif
+{% endif %}
 
-{% if container.data.is_double_sparse %}
+{% if container.data.lattice_is_double_sparse %}
 static const __int128 LAMBDA_INV_MOD = {{ container.get('lambda_inv_mod') }}{{ "ULL" if container.get('lambda_inv_mod') >= 0 else "LL" }};
 static const __int128 GAMMA_POW_K_MOD = {{ container.get('gamma_pow_k_mod') }}{{ "ULL" if container.get('gamma_pow_k_mod') >= 0 else "LL" }};
 static const __int128 GAMMA_POW_N_LAMBDA_MOD ={{ container.get('gamma_pow_n_lambdda_mod') }}{{ "ULL" if container.get('gamma_pow_n_lambdda_mod') >= 0 else "LL" }};
 {% endif %}
 
-{% if container.data.is_babai_usable %}
+{% if container.data.babai_is_usable %}
 # define H1 {{ container.get('h1') }}
 # define H2 {{ container.get('h2') }}
 

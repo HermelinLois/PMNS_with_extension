@@ -25,13 +25,13 @@ void polynomials_product(__int128 *out, const int64_t *PolA, const int64_t *PolB
 
 void reduction_montgomery_lattice(int64_t *out, __int128 *polynomial, const int64_t (*sublattice)[], const int64_t (*sublattice_inv)[]);
 
-# if IS_TOEPLITZ_USABLE
+# if TOEPLITZ_IS_USABLE
 void reduction_montgomery_toeplitz(int64_t *out, __int128 *polynomial, const int64_t *sublattice, const uint64_t *sublattice_inv);
 
 void reduction_montgomery_toeplitz_recursive(int64_t *out, __int128 *polynomial, const int64_t *sublattice, const uint64_t *sublattice_inv);
 #endif
 
-# if IS_DOUBLE_SPARSE
+# if LATTICE_IS_DOUBLE_SPARSE
 void reduction_montgomery_linear(int64_t *out, __int128 *polynomial);
 #endif
 }
@@ -104,7 +104,7 @@ static inline void pmns_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGRE
     reduction_montgomery_lattice(poly_res, tmp, L, L_INV);
 }
 
-# if IS_TOEPLITZ_USABLE
+# if TOEPLITZ_IS_USABLE
 static inline void pmns_toeplitz_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
@@ -122,7 +122,7 @@ static inline void pmns_toeplitz_recursive_operation(int64_t poly_res[DEGREE], i
 }
 #endif
 
-# if IS_DOUBLE_SPARSE
+# if LATTICE_IS_DOUBLE_SPARSE
 static inline void pmns_linear_operation(int64_t poly_res[DEGREE], int64_t poly_a[DEGREE], int64_t poly_b[DEGREE]){
     /* Define the operation that will be measured for benchmarking. In this case, it's the polynomial multiplication 
      followed by reduction in the PMNS representation.*/
@@ -237,7 +237,7 @@ void do_pmns_generic_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_D
 	BENCHMARKS_CORE(tests_pool, INIT_PMNS_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, pmns_format, pmns_operation);
 }
 
-# if IS_TOEPLITZ_USABLE
+# if TOEPLITZ_IS_USABLE
 void do_pmns_toeplitz_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
     /* Do the bench march for the product using Toeplitz matrix structure */
 	BENCHMARKS_CORE(tests_pool, INIT_PMNS_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, pmns_format, pmns_toeplitz_operation);
@@ -249,7 +249,7 @@ void do_pmns_toeplitz_recursive_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][
 }
 #endif
 
-# if IS_DOUBLE_SPARSE
+# if LATTICE_IS_DOUBLE_SPARSE
 void do_pmns_linear_bench(mp_limb_t tests_pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], const char* method_name){
     /* Do the bench march for the product using linear matrix structure */
 	BENCHMARKS_CORE(tests_pool, INIT_PMNS_ELEMENTS, NO_ELEMENT_TO_CLEAR, method_name, pmns_format, pmns_linear_operation);
@@ -283,12 +283,12 @@ void test_libraries_vs_pmns(){
     // Run benchmarks for each method
     do_pmns_generic_bench(pool, "PMNS (Generic matrix)");
 
-	# if IS_TOEPLITZ_USABLE
+	# if TOEPLITZ_IS_USABLE
     do_pmns_toeplitz_bench(pool, "PMNS (Toeplitz matrix)");
 	do_pmns_toeplitz_recursive_bench(pool, "PMNS (Toeplitz recursive matrix)");
 	#endif
 	
-	# if IS_DOUBLE_SPARSE
+	# if LATTICE_IS_DOUBLE_SPARSE
     do_pmns_linear_bench(pool, "PMNS (Linear representation)");
 	#endif
 

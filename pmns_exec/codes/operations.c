@@ -9,7 +9,7 @@
 /*=================================================================
                 FUNCTIONS OVER POLYNOMIALS COEFFICIENTS
 =================================================================*/
-# if IS_BABAI_USABLE
+# if BABAI_IS_USABLE
 void coeff_shift_i64(__int128 out[DEGREE], __int128 polynomial[DEGREE], int n_shift){
     /*define a function to shift coefficients of a polynomial by n_shift bits to the right, using int128 type for the coefficients
     and cast the result to int64_t*/
@@ -153,7 +153,7 @@ void polynomials_product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t Pol
     int PROD_SIZE = 2 * DEGREE - 1;
     __int128 tmp_poly[PROD_SIZE];
 
-    #if IS_E_BINOMIAL
+    #if POLYNOMIAL_E_IS_BINOMIAL
     __int128 sum;            
     for(int i = 0; i < DEGREE-1; i++){
         tmp_poly[i + DEGREE - 1] = PolB[i];
@@ -185,7 +185,7 @@ void polynomials_product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t Pol
     #endif
 }
 
-# if IS_ELEMENTS_IN_GAMMA_BASIS
+# if ELEMENTS_ARE_IN_GAMMA_BASIS
 // /!\ this function only works if E = X^n - lambda
 // multiply polynomial by X^pow and apply external reduction if needed, then add the result to out polynomial    
 void addmul_polmpn_Xpow_modE(int n_limbs, mp_limb_t out[DEGREE][n_limbs], mp_limb_t polmpn[DEGREE][n_limbs], unsigned int pow) {
@@ -350,7 +350,7 @@ void prod_pol_mat_i128(__int128 out[DEGREE], __int128 polynomial[DEGREE], const 
 }
 
 
-# if IS_TOEPLITZ_USABLE
+# if TOEPLITZ_IS_USABLE
 void prod_pol_mat_toeplitz_i64(__int128 out[DEGREE], const __int128 polynomial[DEGREE], const uint64_t matrix_toeplitz[2*DEGREE - 1]) {
     // compute the product of an int128 polynomial with a uint64_t Toeplitz matrix mod 2^PHI_POW and store the result in an int128 polynomial
     for (int i = 0; i < DEGREE; i++) {
@@ -583,7 +583,7 @@ void prod_pol_mat_toeplitz_recursive_i128(__int128 out[DEGREE], const __int128 v
 # endif
 
 
-# if IS_DOUBLE_SPARSE
+# if LATTICE_IS_DOUBLE_SPARSE
 void prod_pol_mat_linear_i64(int64_t out[DEGREE], __int128 polynomial[DEGREE]) {
     /* compute the product of an int128 polynomial with a linear matrix and store the result in an int64_t polynomial
     This function is specialized for the double sparse structure */

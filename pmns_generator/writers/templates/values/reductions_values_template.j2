@@ -7,10 +7,10 @@ static int64_t POL_B[N_TESTS][DEGREE] = {{polB}};
 
 static int64_t MONTGOMERY_PROD_RED[N_TESTS][DEGREE] = {{montgomery_red}};
 
-{% if container.data.is_toeplitz_usable %}
+{% if container.data.toeplitz_is_usable %}
 static int64_t MONTGOMERY_PROD_RED_TOEPLITZ[N_TESTS][DEGREE] = {{montgomery_red_toeplitz}};
 {% endif %}
 
-{% if container.data.is_babai_usable %}
+{% if container.data.babai_is_usable %}
 static int64_t BABAI_PROD_RED[N_TESTS][DEGREE] = {{babai_red}};
 {% endif %}

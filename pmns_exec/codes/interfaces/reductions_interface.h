@@ -14,7 +14,7 @@
 /*=================================================================
                         BABAI REDUCTION FUNCTION 
 =================================================================*/
-# if IS_BABAI_USABLE
+# if BABAI_IS_USABLE
 void reduction_babai(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]);
 # endif
 
@@ -23,13 +23,13 @@ void reduction_babai(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int
 =================================================================*/
 void reduction_montgomery_lattice(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[DEGREE][DEGREE], const int64_t sublattice_inv[DEGREE][DEGREE]);
 
-# if IS_TOEPLITZ_USABLE
+# if TOEPLITZ_IS_USABLE
 void reduction_montgomery_toeplitz(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2 * DEGREE - 1], const uint64_t sublattice_inv[2 * DEGREE - 1]);
 
 void reduction_montgomery_toeplitz_recursive(int64_t out[DEGREE], __int128 polynomial[DEGREE], const int64_t sublattice[2 * DEGREE - 1], const uint64_t sublattice_inv[2 * DEGREE - 1]);
 # endif
 
-# if IS_DOUBLE_SPARSE
+# if LATTICE_IS_DOUBLE_SPARSE
 void reduction_montgomery_linear(int64_t out[DEGREE], __int128 polynomial[DEGREE]);
 # endif
 

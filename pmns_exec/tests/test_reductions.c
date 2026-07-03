@@ -27,17 +27,17 @@ void test_equality(){
         reduction_montgomery_lattice(out, polynomial, L, L_INV);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery");
 
-        # if IS_DOUBLE_SPARSE
+        # if LATTICE_IS_DOUBLE_SPARSE
         reduction_montgomery_linear(out, polynomial);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery linear");
         #endif
 
-        # if IS_BABAI_USABLE
+        # if BABAI_IS_USABLE
         reduction_babai(out, polynomial, L, L_INV_BABAI);
         check_equality(DEGREE, out, BABAI_PROD_RED[idx], "Babai");
         #endif
 
-        # if IS_TOEPLITZ_USABLE
+        # if TOEPLITZ_IS_USABLE
         reduction_montgomery_toeplitz(out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz");
 
@@ -46,7 +46,7 @@ void test_equality(){
         #endif
     }
 
-# if IS_BABAI_USABLE
+# if BABAI_IS_USABLE
     printf("Montgomery and Babai reductions seems to work with given parameters\n");
 # else 
     printf("Montgomery reductions seems to work with given parameters\n");

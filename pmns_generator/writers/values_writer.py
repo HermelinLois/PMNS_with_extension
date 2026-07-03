@@ -105,12 +105,12 @@ def write_reduction_values(env, n_test, container, convs_pool) -> None:
         montgomery_reductions.append(montgomery_red)
         
         # If the Toeplitz reduction is usable, compute the Montgomery reduction using the Toeplitz method
-        if container.get('is_toeplitz_usable'):
+        if container.get('toeplitz_is_usable'):
             montgomery_red_toeplitz = fast_montgomery_reduction(prod, mat_M, mat_N)
             montgomery_reductions_toeplitz.append(montgomery_red_toeplitz)
         
         # If the Babai reduction is usable, compute the Babai rounding limited reduction
-        if container.get('is_babai_usable'):
+        if container.get('babai_is_usable'):
             babai_red = babai_rounding_limited_reduction(prod, container)     
             babai_reductions.append(babai_red)
         
@@ -121,10 +121,10 @@ def write_reduction_values(env, n_test, container, convs_pool) -> None:
                     'container': container}
     
     # Add optional reduction methods to the test parameters if they are usable
-    if container.get('is_toeplitz_usable'):
+    if container.get('toeplitz_is_usable'):
         tests_params['montgomery_red_toeplitz'] = format.format_matrix_to_int64(montgomery_reductions_toeplitz)
 
-    if container.get('is_babai_usable'):
+    if container.get('babai_is_usable'):
         tests_params['babai_red'] = format.format_matrix_to_int64(babai_reductions)
 
     template = env.get_template("reductions_values_template.j2")

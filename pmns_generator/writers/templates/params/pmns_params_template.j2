@@ -16,11 +16,11 @@
 # define BETA {{ -container.get('E')[0] }}
 {%endif%}
 
-# define IS_TOEPLITZ_USABLE {{ 1 if container.data.is_toeplitz_usable else 0 }}
-# define IS_BABAI_USABLE {{ 1 if container.data.is_babai_usable else 0 }}
-# define IS_ELEMENTS_IN_GAMMA_BASIS {{ 1 if container.data.is_elements_in_gamma_basis else 0 }}
-# define IS_DOUBLE_SPARSE {{ 1 if container.data.is_double_sparse else 0 }}
-# define IS_E_BINOMIAL {{ 1 if container.get('etype') == container.type0 else 0 }}
+# define TOEPLITZ_IS_USABLE {{ 1 if container.data.toeplitz_is_usable else 0 }}
+# define BABAI_IS_USABLE {{ 1 if container.data.babai_is_usable else 0 }}
+# define ELEMENTS_ARE_IN_GAMMA_BASIS {{ 1 if container.data.elements_are_in_gamma_basis else 0 }}
+# define LATTICE_IS_DOUBLE_SPARSE {{ 1 if container.data.lattice_is_double_sparse else 0 }}
+# define POLYNOMIAL_E_IS_BINOMIAL {{ 1 if container.get('etype') == container.type0 else 0 }}
 
 static mp_limb_t GAMMA[EXTENSION_DEGREE][N_LIMBS] __attribute__((unused)) = {{ container.get('gamma', True) }};
 

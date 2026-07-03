@@ -19,7 +19,7 @@
 /*=================================================================
                 FUNCTIONS OVER POLYNOMIALS COEFFICIENTS
 =================================================================*/
-# if IS_BABAI_USABLE
+# if BABAI_IS_USABLE
 void coeff_shift_i64(__int128 out[DEGREE], __int128 polynomial[DEGREE], int n_shift);
 
 void coeff_shift_i128(__int128 out[DEGREE], __int128 polynomial[DEGREE], int n_shift);
@@ -42,7 +42,7 @@ void recursive_karatsuba_product(__int128 out[2 * DEGREE - 1], int64_t pol_A[DEG
 
 void polynomials_product(__int128 out[DEGREE], int64_t PolA[DEGREE], int64_t PolB[DEGREE]);
 
-# if IS_ELEMENTS_IN_GAMMA_BASIS
+# if ELEMENTS_ARE_IN_GAMMA_BASIS
 void addmul_polmpn_Xpow_modE(int n_limbs, mp_limb_t out[DEGREE][n_limbs], mp_limb_t polmpn[DEGREE][n_limbs], unsigned int pow);
 #endif
 
@@ -61,7 +61,7 @@ void prod_pol_mat_i64(__int128 out[DEGREE], __int128 polynomial[DEGREE], const i
 
 void prod_pol_mat_i128(__int128 out[DEGREE], __int128 polynomial[DEGREE], const int64_t matrix[DEGREE][DEGREE]);
 
-# if IS_TOEPLITZ_USABLE
+# if TOEPLITZ_IS_USABLE
 void prod_pol_mat_toeplitz_i64(__int128 out[DEGREE], const __int128 polynomial[DEGREE], const uint64_t matrix_toeplitz[2*DEGREE - 1]);
 
 void prod_pol_mat_toeplitz_i128(__int128 out[DEGREE], const __int128 polynomial[DEGREE], const int64_t matrix_toeplitz[2*DEGREE - 1]);

@@ -35,10 +35,10 @@ class PMNSData:
     n: int
     n_limbs: int
     
-    is_toeplitz_usable: bool
-    is_elements_in_gamma_basis: bool
-    is_double_sparse: bool
-    is_babai_usable: bool
+    toeplitz_is_usable: bool
+    elements_are_in_gamma_basis: bool
+    lattice_is_double_sparse: bool
+    babai_is_usable: bool
     
     pmns_params: Dict[str, Any] = field(default_factory=dict)
     matrices: Dict[str, Any] = field(default_factory=dict)
@@ -164,7 +164,7 @@ class PMNSBuilder:
         """
         n = self.pmns['E'].degree()
         n_limbs = ceil(self.pmns['p'].nbits() / self.pmns['phi_pow'])
-        is_double_sparse = (self.structure == STRUCT_SPARSE)
+        lattice_is_double_sparse = (self.structure == STRUCT_SPARSE)
         
         # Initialize the PMNSData object to hold all relevant parameters and matrices
         data = PMNSData(
@@ -172,10 +172,10 @@ class PMNSBuilder:
             structure=self.structure,
             n=n,
             n_limbs=n_limbs,
-            is_toeplitz_usable=(self.etype == 0),
-            is_elements_in_gamma_basis=(self.pmns['gamma'] == self.pmns['gamma'].parent().gen()),
-            is_double_sparse=is_double_sparse,
-            is_babai_usable=not is_double_sparse,
+            toeplitz_is_usable=(self.etype == 0),
+            elements_are_in_gamma_basis=(self.pmns['gamma'] == self.pmns['gamma'].parent().gen()),
+            lattice_is_double_sparse=lattice_is_double_sparse,
+            babai_is_usable=not lattice_is_double_sparse,
             pmns_params=self.pmns
         )
 
@@ -205,7 +205,7 @@ class PMNSBuilder:
 
         w = search_memory_overhead(pol_e)
         # Compute a factor of the coefficients bound to accurately estimate the number of internal reductions required for pseudo-fast conversions
-        factor = (1 / 2 * L.norm(1)) ** (1 if container.data.is_double_sparse else 2)
+        factor = (1 / 2 * L.norm(1)) ** (1 if container.data.lattice_is_double_sparse else 2)
         
         n_red_pseudo = compute_nb_internal_reductions(w * k * 2**theta_pow * factor, phi, rho, L)
         n_red_fast = compute_nb_internal_reductions(k * 2**theta_pow * 1 / 2 * L.norm(1), phi, rho, L)
@@ -245,12 +245,14 @@ class PMNSBuilder:
         
         # compute the internal reduction matrices M and N for use in reduction operations
         # and various representations of these matrices for use in the PMNS implementation
-        M = search_polynomial_m(L, k, p, gamma, E, sparse=container.data.is_double_sparse)
+        M = search_polynomial_m(L, k, p, gamma, E, sparse=container.data.lattice_is_double_sparse)
         M_mat, N_mat = gen_mn_reduction_matrix(M, E, phi)
         m_space['M_mat'] =  M_mat
         m_space['N_mat'] = N_mat
-        m_space['toeplitz_mat_m'] = gen_toeplitz_representation(M_mat)
-        m_space['toeplitz_mat_n'] = gen_toeplitz_representation(N_mat)
+
+        if container.data.toeplitz_is_usable:
+            m_space['toeplitz_mat_m'] = gen_toeplitz_representation(M_mat)
+            m_space['toeplitz_mat_n'] = gen_toeplitz_representation(N_mat)
 
         T_mat = gen_transition_matrix(gamma, k)
         m_space['T_mat'] = T_mat
@@ -268,7 +270,7 @@ class PMNSBuilder:
         r_space = container.data.reductions
         
         # Compute different parameters for the PMNS implementation based on the structure of the PMNS
-        if container.data.is_double_sparse:
+        if container.data.lattice_is_double_sparse:
             k = container.get('k')
             phi = 2 ** phi_pow
             gamma = container.get('gamma')
@@ -289,7 +291,7 @@ class PMNSBuilder:
             prod = (gamma_pow_k_mod * lambda_inv_mod) % phi
             r_space['gamma_pow_n_lambdda_mod'] = prod if prod <= phi // 2 else prod - phi
         
-        if container.data.is_babai_usable:
+        if container.data.babai_is_usable:
             L = container.get('L')
             rho = container.get('rho')
 
@@ -297,7 +299,7 @@ class PMNSBuilder:
             # if h1 or h2 is nul during computation, it means that the Babai reduction method is not usable for this PMNS configuration
             result = gen_params_for_babai(L, phi_pow, rho, E)
             if result is None:
-                container.data.is_babai_usable = False
+                container.data.babai_is_usable = False
                 return
             
             h1, h2, L_inv_babai = result
