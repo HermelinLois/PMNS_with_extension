@@ -185,8 +185,8 @@ Note: Babai rounding is implemented but currently not used with sparse construct
 
 ## Known Issues & Notes
 
-- Searching for large primes (512+ bits) and `k >= 2` can be time-consuming for generic and specific constructions. Sparse generation is recommended for `ETYPE=0` when appropriate. The sparse workflow for `ETYPE=1` is not yet supported.
+- **Note:** Searching for large primes (512+ bits) and `k >= 2` can be time-consuming for generic and specific constructions. Sparse generation is recommended for `ETYPE=0` when appropriate. The sparse workflow for `ETYPE=1` is not yet supported.
 - **Note:** For very large primes, the automatically found `n_opt` might not be high enough, leading to an unsuccessful PMNS construction for that specific $n$. In such cases, we recommend finding a valid construction for the target prime and manually setting the parameters using the `NOPT` **Makefile** parameter.
-- As a test workflow for conversions and reductions, Python is used to generate input data and expected results. In C, we process this input data and compare the computed output with the Python reference. Depending on the chosen PMNS parameters, test generation can be time-consuming when the number of tests is large. If these tests are not needed, we recommend reducing `NTESTS` or setting it to `0`.
-- If compilation fails with `gmp.h: No such file or directory`, ensure your environment (e.g., conda) is activated or pass `INCLUDE_DIR`/`LIBRARIES_DIR` to `make`.
+- **Note:** As a test workflow for conversions and reductions, Python is used to generate input data and expected results. In C, we process this input data and compare the computed output with the Python reference. Depending on the chosen PMNS parameters, test generation can be time-consuming when the number of tests is large. If these tests are not needed, we recommend reducing `NTESTS` or setting it to `0`.
+- **Note:** If compilation fails with `gmp.h: No such file or directory`, ensure your environment (e.g., conda) is activated or pass `INCLUDE_DIR`/`LIBRARIES_DIR` to `make`.
 - **Caution:** High repetition of `montgomery_reduction_mpn` can cause incorrect results. If the number of internal reductions required for Pseudo-Fast conversion is greater than 2, we recommend switching the reduction method to the `mpz` version.
