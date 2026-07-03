@@ -10,7 +10,7 @@
 # define EXTENSION_DEGREE {{ container.get('k') }}
 # define PHI_POW {{ container.get('phi_pow') }}
 # define P_SIZE {{ container.get('p').nbits() }}
-# define N_TESTS {{ n_test }}
+
 {% if container.get('etype') == container.type0 %}# define LAMBDA {{ -container.get('E')[0] }}
 {%else%}# define ALPHA {{ -container.get('E')[container.get('k')] }}
 # define BETA {{ -container.get('E')[0] }}

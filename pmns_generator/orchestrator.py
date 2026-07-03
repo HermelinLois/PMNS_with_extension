@@ -98,7 +98,8 @@ def main():
             
     if args.action == ACTION_VALUES:        
         env = Environment(loader=FileSystemLoader(str(PARAMS_TEMPLATES_DIR)))
-        params_writer.write_pmns_params(env, args.ntests, container)
+        params_writer.write_pmns_params(env, container)
+        params_writer.write_tests_params(env, args.ntests)
         values_writer.write_values(args.ntests, container)
     
 if __name__ == "__main__":

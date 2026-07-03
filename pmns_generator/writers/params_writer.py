@@ -2,7 +2,7 @@ from pmns_generator.writers.format.PMNS_interface import PMNSContainer
 from jinja2 import Environment, FileSystemLoader
 from config import PARAMS_OUTPUT_DIR, PARAMS_TEMPLATES_DIR
 
-def write_pmns_params(env, n_test, container): 
+def write_pmns_params(env, container): 
     """
     Write PMNS parameters to a header file based on the provided PMNS container.
     Args:
@@ -13,7 +13,7 @@ def write_pmns_params(env, n_test, container):
         None : Writes the generated parameters to a file in the 'pmns_params' file.
     """
     template = env.get_template("pmns_params_template.j2")
-    rendered_params = template.render(container=container, n_test=n_test)
+    rendered_params = template.render(container=container)
     
     output_path = PARAMS_OUTPUT_DIR / "pmns_params.h"
     output_path.write_text(rendered_params)
@@ -71,7 +71,20 @@ def write_comparaison_params(env, container):
     output_path = PARAMS_OUTPUT_DIR / "comparaison_params.h"
     output_path.write_text(rendered_params)
     
-
+def write_tests_params(env, n_test):
+    """
+    Write test parameters to a header file based on the provided number of test cases.
+    Args:
+        env (jinja2.Environment): Jinja2 environment for template rendering
+        n_test (int): Number of test cases to generate
+    Returns:
+        None : Writes the generated parameters to a file in the 'tests_params' file.
+    """
+    template = env.get_template("tests_params_template.j2")
+    rendered_params = template.render(n_test=n_test)
+    
+    output_path = PARAMS_OUTPUT_DIR / "tests_params.h"
+    output_path.write_text(rendered_params)
 
 def write_params(n_test, container:PMNSContainer):
     """
@@ -84,8 +97,9 @@ def write_params(n_test, container:PMNSContainer):
     """
     PARAMS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     env = Environment(loader=FileSystemLoader(str(PARAMS_TEMPLATES_DIR)))
-        
-    write_pmns_params(env, n_test, container)
+    
+    write_tests_params(env, n_test)
+    write_pmns_params(env, container)
     write_reductions_params(env, container)
     write_comparaison_params(env, container)
     write_conversions_params(env, container)

@@ -20,7 +20,6 @@ static const uint64_t TOEPLITZ_MAT_N [2*DEGREE - 1] = {{ container.get('toeplitz
 # endif
 
 {% if container.data.is_double_sparse %}
-static const __int128 LAMBDA = {{ container.get('lambda') }};
 static const __int128 LAMBDA_INV_MOD = {{ container.get('lambda_inv_mod') }}{{ "ULL" if container.get('lambda_inv_mod') >= 0 else "LL" }};
 static const __int128 GAMMA_POW_K_MOD = {{ container.get('gamma_pow_k_mod') }}{{ "ULL" if container.get('gamma_pow_k_mod') >= 0 else "LL" }};
 static const __int128 GAMMA_POW_N_LAMBDA_MOD ={{ container.get('gamma_pow_n_lambdda_mod') }}{{ "ULL" if container.get('gamma_pow_n_lambdda_mod') >= 0 else "LL" }};
