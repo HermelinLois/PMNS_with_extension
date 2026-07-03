@@ -28,34 +28,42 @@ void reduction_babai(int degree, int64_t out[degree], __int128 polynomial[degree
 /*=================================================================
                     MONTGOMERY REDUCTION FUNCTION 
 =================================================================*/
-// define a macro to define a generic structure for the montgomery reduction function
-#define MONTGOMERY_REDUCTION_CORE(Q_TYPE, T_TYPE, DEGREE, PRODUCT_FUNC64, PRODUCT_FUNC128, OUT, POLYNOMIAL, LATTICE, LATTICE_INV)   \
-    Q_TYPE Q[DEGREE];                                                                                                               \
-    T_TYPE T[DEGREE];                                                                                                               \
-                                                                                                                                    \
-    PRODUCT_FUNC64(Q, POLYNOMIAL, LATTICE_INV);                                                                             \
-    PRODUCT_FUNC128(T, Q, LATTICE);                                                                                         \
-                                                                                                                                    \
-    for (int deg = 0; deg < DEGREE; deg++)                                                                                          \
-        OUT[deg] = (T[deg] + POLYNOMIAL[deg]) >> 64;                                                
-
-
 void reduction_montgomery_lattice(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[degree][degree], const int64_t sublattice_inv[degree][degree]) {
     /*Define the Montgomery internal reduction approach with the multiplication of the polynomial and sublattices*/
-    MONTGOMERY_REDUCTION_CORE(__int128, __int128, degree, prod_pol_mat_i64, prod_pol_mat_i128, out, polynomial, sublattice, sublattice_inv);
+    __int128 Q[DEGREE];
+    __int128 T[DEGREE];
+
+    prod_pol_mat_i64(Q, polynomial, sublattice_inv);
+    prod_pol_mat_i128(T, Q, sublattice);
+
+    for (int deg = 0; deg < degree; deg++)
+        out[deg] = (T[deg] + polynomial[deg]) >> 64;
 }
 
 
 # if IS_TOEPLITZ_USABLE
 void reduction_montgomery_toeplitz(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[2*degree - 1], const uint64_t sublattice_inv[2*degree - 1]) {
     /*Define the Montgomery Toeplitz internal reduction approach using the Toeplitz structure*/
-    MONTGOMERY_REDUCTION_CORE(__int128, __int128, degree, prod_pol_mat_toeplitz_i64, prod_pol_mat_toeplitz_i128, out, polynomial, sublattice, sublattice_inv);
+    __int128 Q[degree];
+    __int128 T[degree];
+
+    prod_pol_mat_toeplitz_i64(Q, polynomial, sublattice_inv);
+    prod_pol_mat_toeplitz_i128(T, Q, sublattice);
+
+    for (int deg = 0; deg < degree; deg++)
+        out[deg] = (T[deg] + polynomial[deg]) >> 64;
 }
 
 
 void reduction_montgomery_toeplitz_recursive(int degree, int64_t out[degree], __int128 polynomial[degree], const int64_t sublattice[2 * degree - 1], const uint64_t sublattice_inv[2 * degree - 1]){
     /*Define the Montgomery Toeplitz recursive internal reduction approach using the recursive Toeplitz structure*/
-    MONTGOMERY_REDUCTION_CORE(__int128, __int128, degree, prod_pol_mat_toeplitz_recursive_i64, prod_pol_mat_toeplitz_recursive_i128, out, polynomial, sublattice, sublattice_inv);
+    __int128 Q[degree];
+    __int128 T[degree];
+    prod_pol_mat_toeplitz_recursive_i64(Q, polynomial, sublattice_inv);
+    prod_pol_mat_toeplitz_recursive_i128(T, Q, sublattice);
+
+    for (int deg = 0; deg < degree; deg++)
+        out[deg] = (T[deg] + polynomial[deg]) >> 64;
 }
 # endif
 
@@ -68,8 +76,8 @@ void reduction_montgomery_linear(int extension_degree, int degree, int64_t out[d
     int64_t Q[degree];
     __int128 T[degree];
 
-    prod_pol_mat_linear_i64(extension_degree, degree, Q, polynomial);
-    prod_pol_mat_linear_i128(extension_degree, degree, T, Q);
+    prod_pol_mat_linear_i64(Q, polynomial);
+    prod_pol_mat_linear_i128(T, Q);
 
     for (int deg = 0; deg < degree; deg++)
         out[deg] = (T[deg] + polynomial[deg]) >> 64;
