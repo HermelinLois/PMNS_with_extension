@@ -13,7 +13,7 @@ if ROOT_PATH not in sys.path:
 from config import VALUES_OUTPUT_DIR, VALUES_TEMPLATES_DIR
 from pmns_factory.core.operations.convertions_gestion import montgomery_fast_conversion, montgomery_exact_conversion, montgomery_pseudo_fast_conversion
 from pmns_factory.core.operations.reductions.babai_reduction import babai_rounding_limited_reduction
-from pmns_factory.core.operations.reductions.montgomery_reduction import fast_montgomery_reduction
+from pmns_factory.core.operations.reductions.montgomery_reduction import montgomery_reduction_lattice
 from pmns_generator.writers.format.PMNS_interface import PMNSContainer
 from pmns_generator.writers.format import format_element as format
 
@@ -101,12 +101,12 @@ def write_reduction_values(env, n_test, container, convs_pool) -> None:
         polynomials_a.append(pol_A)
         polynomials_b.append(pol_B)
         
-        montgomery_red = fast_montgomery_reduction(prod, L, L_inv)
+        montgomery_red = montgomery_reduction_lattice(prod, L, L_inv)
         montgomery_reductions.append(montgomery_red)
         
         # If the Toeplitz reduction is usable, compute the Montgomery reduction using the Toeplitz method
         if container.get('toeplitz_is_usable'):
-            montgomery_red_toeplitz = fast_montgomery_reduction(prod, mat_M, mat_N)
+            montgomery_red_toeplitz = montgomery_reduction_lattice(prod, mat_M, mat_N)
             montgomery_reductions_toeplitz.append(montgomery_red_toeplitz)
         
         # If the Babai reduction is usable, compute the Babai rounding limited reduction

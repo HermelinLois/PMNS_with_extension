@@ -6,7 +6,7 @@
 # ==================================================
 
 from sage.all import matrix, PolynomialRing, ZZ, log, RR, ceil
-from pmns_factory.core.operations.reductions.montgomery_reduction import fast_montgomery_reduction
+from pmns_factory.core.operations.reductions.montgomery_reduction import montgomery_reduction_lattice
 
 PR = PolynomialRing(ZZ, "X")
 
@@ -74,7 +74,7 @@ def montgomery_pseudo_fast_conversion(element, container):
         polynomial += current_pol * PR(zpols[deg]) % E
 
     for _ in range(container.get('n_red_pseudo')):
-        polynomial = fast_montgomery_reduction(polynomial, L, L_inv, phi)
+        polynomial = montgomery_reduction_lattice(polynomial, L, L_inv, phi)
     
     assert polynomial(gamma) == element, f"polynomial doesn't represent {element=}\n{polynomial(gamma)}"
     assert all(abs(c) < rho for c in polynomial), f"{rho=} too low for {element=}\n{polynomial =}"
@@ -103,7 +103,7 @@ def montgomery_fast_conversion(element, container):
             current_element >>= theta_pow
     
     for i in range(container.get('n_red_fast')):
-        polynomial = fast_montgomery_reduction(polynomial, L, L_inv, phi)
+        polynomial = montgomery_reduction_lattice(polynomial, L, L_inv, phi)
     
     assert polynomial(gamma) == element, f"polynomial doesn't represent {element=}\n{polynomial(gamma)}"
     assert all(abs(c) < rho for c in polynomial), f"{rho=} too low for {element=}\n{polynomial =}"
@@ -137,7 +137,7 @@ def montgomery_exact_conversion(element, container, add_red=0):
     V = convert_element_to_polynomial(alpha, gamma, transition_matrix)
 
     for _ in range(nb_iteration):
-        V = fast_montgomery_reduction(V, L, L_inv, phi)
+        V = montgomery_reduction_lattice(V, L, L_inv, phi)
 
     assert V(gamma) == element, f"polynomial doesn't represent {element=}\n{V(gamma)}"
     assert all(abs(c) < rho for c in V), f"{rho=} too low for {element=}\n{V =}"

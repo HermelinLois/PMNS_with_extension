@@ -148,7 +148,7 @@ def gen_mn_reduction_matrix(M, E, phi: int):
     return mat_m, mat_n
 
 
-def montgomery_reduction(pol_p, M, N, E, gamma, phi:int =2**64):
+def montgomery_reduction_polynomial(pol_p, M, N, E, gamma, phi:int =2**64):
     """
     Reduction of a polynomial with Montgomery reduction
 
@@ -176,7 +176,7 @@ def montgomery_reduction(pol_p, M, N, E, gamma, phi:int =2**64):
     return reduction
 
 
-def fast_montgomery_reduction(pol_p, mat_sublattice, mat_sublattice_inv, phi:int = 2**64):
+def montgomery_reduction_lattice(pol_p, mat_sublattice, mat_sublattice_inv, phi:int = 2**64):
     """
     Fast reduction of a polynomial with Montgomery reduction using precomputed matrices of the sublattice.
     Args:
