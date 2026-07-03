@@ -6,7 +6,7 @@
 # include "../codes/interfaces/test_utils_interface.h"
 # include "../codes/interfaces/conversions_interface.h"
 
-void rand_field_element(int extension_degree, mp_limb_t out[extension_degree][N_LIMBS], gmp_randstate_t state){
+void rand_field_element(mp_limb_t out[EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state){
     /* Generate a random field element as extension_degree coefficients.
     Each coefficient is sampled uniformly in [2^(P_SIZE-1), p-1], to ensure
     the product bewteen two elements need a reduction modulus the prime p. */
@@ -21,7 +21,7 @@ void rand_field_element(int extension_degree, mp_limb_t out[extension_degree][N_
     mpz_sub_ui(tmp, p_mpz, 1);
     mpz_sub(tmp, tmp, pow2);
 
-    for (int i=0; i<extension_degree; i++){
+    for (int i=0; i<EXTENSION_DEGREE; i++){
         mpz_urandomm(rand_val, state, tmp);
         mpz_add(rand_val, rand_val, pow2);
         mpn_copyi(out[i], mpz_limbs_read(rand_val), N_LIMBS);

@@ -53,7 +53,7 @@ void do_bench(void (*to_pmns)(int extension_degree, int degree, int64_t pmns[deg
 	
     // heat up the cache
 	for(int i=0;i<N_BENCH_TESTS;i++){
-		rand_field_element(EXTENSION_DEGREE, a, state);
+		rand_field_element(a, state);
 		to_pmns(EXTENSION_DEGREE, DEGREE, polynomial, a);
 	}
 	
@@ -104,7 +104,7 @@ void do_bench(void (*to_pmns)(int extension_degree, int degree, int64_t pmns[deg
 static inline void gen_tests_pool(mp_limb_t pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state){
     // Generate random field elements to be used for benchmarking
     for (int i=0; i<N_BENCH_SAMPLES; i++)
-        rand_field_element(EXTENSION_DEGREE, pool[i], state);
+        rand_field_element(pool[i], state);
 }
 
 void test_speed(){

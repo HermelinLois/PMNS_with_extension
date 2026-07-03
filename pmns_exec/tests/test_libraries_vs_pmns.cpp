@@ -17,7 +17,7 @@
 
 
 extern "C" {
-void rand_field_element(int extension_degree, mp_limb_t (*a)[N_LIMBS], gmp_randstate_t state);
+void rand_field_element(mp_limb_t (*a)[N_LIMBS], gmp_randstate_t state);
 
 void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t *out, const mp_limb_t (*element_data)[N_LIMBS]);
 
@@ -153,8 +153,8 @@ static inline void ntl_operation(ZZ_pE& res, const ZZ_pE& a, const ZZ_pE& b){
 static inline void gen_tests_pool(mp_limb_t pool[2 * N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], gmp_randstate_t state){
     // Generate random field elements to be used for benchmarking
 	for (int i = 0; i < N_BENCH_SAMPLES; i++) {
-		rand_field_element(EXTENSION_DEGREE, pool[i], state);
-		rand_field_element(EXTENSION_DEGREE, pool[i + N_BENCH_SAMPLES], state);
+		rand_field_element(pool[i], state);
+		rand_field_element(pool[i + N_BENCH_SAMPLES], state);
 	}
 }
 
