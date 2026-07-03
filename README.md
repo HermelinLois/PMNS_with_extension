@@ -119,7 +119,7 @@ make recompile      # Recreate executables
 | `ETYPE` | int | 0 | External polynomial form (0 or 1) |
 | `STRUCT` | string | generic | Structure (generic, specific, sparse) |
 | `NTESTS` | int | 10 | Number of tests |
-| `OPT` | string | `-O3 -funroll-loops` | Compilation flags |
+| `OPT` | string | `-O3 -funroll-loops -march=native` | Compilation flags |
 | `LOAD` | flag | - | Load precomputed PMNS if it exists |
 | `NOPT` | int | None | Start the PMNS construction with a `n=NOPT` if defined|
 
