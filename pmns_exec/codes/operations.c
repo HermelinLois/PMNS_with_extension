@@ -10,20 +10,17 @@
                 FUNCTIONS OVER POLYNOMIALS COEFFICIENTS
 =================================================================*/
 # if IS_BABAI_USABLE
-# define COEFF_SHIFT_CORE(RETURN_TYPE, DEGREE, OUT, POLYNOMIAL, N_SHIFT){    \
-    for (int i=0; i<DEGREE; i++)                                        \
-        OUT[i] = (RETURN_TYPE)(POLYNOMIAL[i] >> N_SHIFT);               \
-}
-
 void coeff_shift_i64(int degree, __int128 out[degree], __int128 polynomial[degree], int n_shift){
     /*define a function to shift coefficients of a polynomial by n_shift bits to the right, using int128 type for the coefficients
     and cast the result to int64_t*/
-    COEFF_SHIFT_CORE(int64_t, degree, out, polynomial, n_shift);
+    for (int i=0; i<degree; i++)
+        out[i] = (int64_t)(polynomial[i] >> n_shift);
 }
 
 void coeff_shift_i128(int degree, __int128 out[degree], __int128 polynomial[degree], int n_shift){
     /*define a function to shift coefficients of a polynomial by n_shift bits to the right, using int128 type for the coefficients*/
-    COEFF_SHIFT_CORE(__int128, degree, out, polynomial, n_shift);
+    for (int i=0; i<degree; i++)
+        out[i] = polynomial[i] >> n_shift;
 }
 #endif
 
@@ -102,7 +99,7 @@ void addmul_polmpn_pol64(int degree, int n_limbs, mp_limb_t out[degree][n_limbs]
 }
 
 
-void recursive_karatsuba_product(int degree, __int128 out[2 * degree - 1], int64_t pol_A[degree], int64_t pol_B[degree]) {
+static inline void recursive_karatsuba_product(int degree, __int128 out[2 * degree - 1], int64_t pol_A[degree], int64_t pol_B[degree]) {
     // Compute the product of two polynomials using schoolbook multiplication
     if (degree < KARATSUBA_THRESHOLD || ((degree & 1) == 1)) {
         for (int i = 0; i < 2 * degree - 1; i++) out[i] = 0;
@@ -150,28 +147,32 @@ void recursive_karatsuba_product(int degree, __int128 out[2 * degree - 1], int64
 
 void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree], int64_t PolB[degree]){
     int PROD_SIZE = 2 * degree - 1;
-    __int128 P[PROD_SIZE];
+    __int128 tmp_poly[PROD_SIZE];
 
-    recursive_karatsuba_product(degree, P, PolA, PolB);
+    #if IS_E_BINOMIAL
+    __int128 sum;            
+    for(int i = 0; i < DEGREE-1; i++){
+        tmp_poly[i + DEGREE - 1] = PolB[i];
+        tmp_poly[i] = PolB[1 + i] * LAMBDA;
+    }
 
-    // Directly copy the first degree coefficients to the output polynomial
-    for (int i = 0; i < degree; i++) out[i] = P[i];
+    tmp_poly[2*DEGREE - 2] = PolB[DEGREE - 1];
 
-    # if IS_E_BINOMIAL
-    // With this condition, we know our external reduction matrix as a form X^n - lambda, 
-    // so we can optimize the external reduction by using the first column of the matrix and 
-    // avoid unnecessary multiplications by directly extracting diagonal elements for external reduction.
-    for (int j = degree; j < PROD_SIZE; j++) {
-        __int128 p_val = P[j];
-        if (p_val == 0) continue;
-
-        out[j-degree] += P[j] * (__int128)LAMBDA;
+    for(int i = 0; i < DEGREE; i++){
+        sum = 0;
+        for(int j = 0; j < DEGREE; j++)
+            sum += (__int128) PolA[j] * tmp_poly[DEGREE - 1 - j + i];
+        out[i] = sum;
     }
     #else
+    recursive_karatsuba_product(degree, tmp_poly, PolA, PolB);
+
+    // Directly copy the first degree coefficients to the output polynomial
+    for (int i = 0; i < degree; i++) out[i] = tmp_poly[i];
+    
     // Apply generic external reduction using the external reduction matrix for the remaining coefficients
     for (int j = 0; j < degree - 1; j++) {
-        __int128 p_val = P[degree + j];
-        if (p_val == 0) continue;
+        __int128 p_val = tmp_poly[degree + j];
 
         for (int i = 0; i < degree; i++) {
             out[i] += p_val * (__int128)EXT_MAT[j][i];
@@ -322,155 +323,258 @@ void prod_polmpz_mat_i64(int degree, int64_t out[degree], mpz_t pol[degree], con
     mpz_clears(tmp, acc, NULL);
 }
 
-// Define a macro to compute the product of a polynomial with a matrix
-#define PROD_POL_MAT_CORE(RETURN_TYPE, DEGREE, OUT, POLYNOMIAL, MATRIX){    \
-    for (int i = 0; i < DEGREE; i++) {                                      \
-        RETURN_TYPE acc = 0;                                                \
-        for (int j = 0; j < DEGREE; j++) {                                  \
-            acc += (RETURN_TYPE)POLYNOMIAL[j] * (RETURN_TYPE)MATRIX[j][i];  \
-        }                                                                   \
-        OUT[i] = acc;                                                       \
-    }                                                                       \
-}
-
 
 void prod_pol_mat_i64(int degree, __int128 out[degree], __int128 polynomial[degree], const int64_t matrix[degree][degree]) {
     // compute the product of an int128 polynomial with an int64_t matrix mod 2^PHI_POW and store the result in an int128 polynomial
-    PROD_POL_MAT_CORE(int64_t, degree, out, polynomial, matrix);
+    for (int i=0; i<degree; i++){
+        int64_t acc = 0;
+        for (int j=0; j<degree; j++)
+            acc += (int64_t)polynomial[j] * (int64_t)matrix[j][i];
+        out[i] = acc;
+    }
 }
 
 
 void prod_pol_mat_i128(int degree, __int128 out[degree], __int128 polynomial[degree], const int64_t matrix[degree][degree]) {
     // compute the product of an int128 polynomial with an int64_t matrix and store the result in an int128 polynomial
-    PROD_POL_MAT_CORE(__int128, degree, out, polynomial, matrix);
+    for (int i=0; i<degree; i++){
+        __int128 acc = 0;
+        for (int j=0; j<degree; j++)
+            acc += (__int128)polynomial[j] * (__int128)matrix[j][i];
+        out[i] = acc;
+    }
 }
 
 
 # if IS_TOEPLITZ_USABLE
-// Define a macro to compute the product of a polynomial with a Toeplitz matrix
-#define PROD_POL_MAT_TOEPLITZ_CORE(RETURN_TYPE, DEGREE, OUT, POLYNOMIAL, MATRIX_TOEPLITZ){               \
-    for (int i = 0; i < DEGREE; i++) {                                                              \
-        RETURN_TYPE acc = 0;                                                                        \
-        for (int j = 0; j < DEGREE; j++) {                                                          \
-            acc += (RETURN_TYPE)POLYNOMIAL[j] * (RETURN_TYPE)MATRIX_TOEPLITZ[DEGREE - 1 - j + i];   \
-        }                                                                                           \
-        OUT[i] = acc;                                                                               \
-    }                                                                                               \
-}
-
-
 void prod_pol_mat_toeplitz_i64(int degree, __int128 out[degree], const __int128 polynomial[degree], const uint64_t matrix_toeplitz[2*degree - 1]) {
     // compute the product of an int128 polynomial with a uint64_t Toeplitz matrix mod 2^PHI_POW and store the result in an int128 polynomial
-    PROD_POL_MAT_TOEPLITZ_CORE(int64_t, degree, out, polynomial, matrix_toeplitz);
+    for (int i = 0; i < degree; i++) {
+        int64_t acc = 0;
+        for (int j = 0; j < degree; j++)
+            acc += (int64_t)polynomial[j] * (int64_t)matrix_toeplitz[degree - 1 - j + i];
+        out[i] = acc;
+    }
 }
 
 
 void prod_pol_mat_toeplitz_i128(int degree, __int128 out[degree], const __int128 polynomial[degree], const int64_t matrix_toeplitz[2*degree - 1]) {
     // compute the product of an int128 polynomial with an int64_t Toeplitz matrix and store the result in an int128 polynomial
-    PROD_POL_MAT_TOEPLITZ_CORE(__int128, degree, out, polynomial, matrix_toeplitz);
+    for (int i = 0; i < degree; i++) {
+        __int128 acc = 0;
+        for (int j = 0; j < degree; j++)
+            acc += (__int128)polynomial[j] * (__int128)matrix_toeplitz[degree - 1 - j + i];
+        out[i] = acc;
+    }
 }
 
-// for recursion purposes, we need to define a core function that can be used recursively for the Karatsuba-like approach and set that all function work with __int128 as the return type, 
-// since we will be working with polynomials of degree n/2 and the result will be of degree n-1, which can be represented by __int128. The recursive function will be called recursively until the degree 
-// is less than a certain threshold, at which point we will use the standard product function.
-#define PROD_POL_MAT_TOEPLITZ_RECURSIVE_CORE(RECURSIVE_FUNC, PRODUCT_FUNC, RETURN_TYPE, MAT_TYPE, DEGREE, OUT, POLYNOMIAL, TOEPLITZ_MATRIX) \
-    if ((DEGREE) < TOEPLITZ_THRESHOLD || (((DEGREE) % 3 != 0) && (((DEGREE) & 1) == 1))) {                \
-        PRODUCT_FUNC(DEGREE, OUT, POLYNOMIAL, TOEPLITZ_MATRIX);          \
-        return;                                                           \
-    }                                                                     \
-                                                                          \
-    else if ((DEGREE) % 3 == 0) {                                         \
-        int m = (DEGREE) / 3;                                             \
-                                                                          \
-        const __int128 *v0 = POLYNOMIAL;                                  \
-        const __int128 *v1 = POLYNOMIAL + m;                              \
-        const __int128 *v2 = POLYNOMIAL + 2 * m;                          \
-                                                                          \
-        __int128 v_sub_02[m], v_sub_12[m], v_sub_01[m];                   \
-        for (int i = 0; i < m; i++) {                                     \
-            v_sub_02[i] = v0[i] - v2[i];                                  \
-            v_sub_12[i] = v1[i] - v2[i];                                  \
-            v_sub_01[i] = v0[i] - v1[i];                                  \
-        }                                                                \
-                                                                          \
-        const MAT_TYPE *M0 = TOEPLITZ_MATRIX;                             \
-        const MAT_TYPE *M1 = TOEPLITZ_MATRIX + m;                         \
-        const MAT_TYPE *M2 = TOEPLITZ_MATRIX + 2 * m;                     \
-        const MAT_TYPE *M3 = TOEPLITZ_MATRIX + 3 * m;                     \
-        const MAT_TYPE *M4 = TOEPLITZ_MATRIX + 4 * m;                     \
-                                                                          \
-        MAT_TYPE M_sum_012[2 * m - 1];                                    \
-        MAT_TYPE M_sum_123[2 * m - 1];                                    \
-        MAT_TYPE M_sum_234[2 * m - 1];                                    \
-                                                                          \
-        for (int i = 0; i < 2 * m - 1; i++) {                             \
-            M_sum_012[i] = M0[i] + M1[i] + M2[i];                         \
-            M_sum_123[i] = M1[i] + M2[i] + M3[i];                         \
-            M_sum_234[i] = M2[i] + M3[i] + M4[i];                         \
-        }                                                                \
-                                                                          \
-        __int128 p0[m], p1[m], p2[m], p3[m], p4[m], p5[m];               \
-                                                                          \
-        RECURSIVE_FUNC(m, p0, v2, M_sum_012);                             \
-        RECURSIVE_FUNC(m, p1, v1, M_sum_123);                             \
-        RECURSIVE_FUNC(m, p2, v0, M_sum_234);                             \
-        RECURSIVE_FUNC(m, p3, v_sub_02, M2);                              \
-        RECURSIVE_FUNC(m, p4, v_sub_12, M1);                              \
-        RECURSIVE_FUNC(m, p5, v_sub_01, M3);                              \
-                                                                          \
-        for (int i = 0; i < m; i++) {                                     \
-            OUT[i] = (RETURN_TYPE)(p0[i] + p3[i] + p4[i]);        \
-            OUT[i + m] = (RETURN_TYPE)(p1[i] + p5[i] - p4[i]);        \
-            OUT[i + 2 * m] = (RETURN_TYPE)(p2[i] - p3[i] - p5[i]);        \
-        }                                                                \
-        return;                                                           \
-    }                                                                     \
-                                                                          \
-    else if ((DEGREE & 1) == 0) {                                                                \
-        int m = (DEGREE) / 2;                                             \
-                                                                          \
-        const __int128 *v0 = POLYNOMIAL;                                  \
-        const __int128 *v1 = POLYNOMIAL + m;                              \
-                                                                          \
-        __int128 v_sub_01[m];                                             \
-        for (int i = 0; i < m; i++)                                       \
-            v_sub_01[i] = v0[i] - v1[i];                                  \
-                                                                          \
-        const MAT_TYPE *M0 = TOEPLITZ_MATRIX;                             \
-        const MAT_TYPE *M1 = TOEPLITZ_MATRIX + m;                         \
-        const MAT_TYPE *M2 = TOEPLITZ_MATRIX + 2 * m;                     \
-                                                                          \
-        MAT_TYPE T_sum_M01[2 * m - 1];                                    \
-        MAT_TYPE T_sum_M12[2 * m - 1];                                    \
-                                                                          \
-        for (int i = 0; i < 2 * m - 1; i++) {                             \
-            T_sum_M01[i] = M0[i] + M1[i];                                 \
-            T_sum_M12[i] = M1[i] + M2[i];                                 \
-        }                                                                \
-                                                                          \
-        __int128 p0[m], p1[m], p2[m];                                     \
-                                                                          \
-        RECURSIVE_FUNC(m, p0, v1, T_sum_M01);                             \
-        RECURSIVE_FUNC(m, p1, v0, T_sum_M12);                             \
-        RECURSIVE_FUNC(m, p2, v_sub_01, M1);                              \
-                                                                          \
-        for (int i = 0; i < m; i++) {                                     \
-            OUT[i] = (RETURN_TYPE)(p0[i] + p2[i]);                    \
-            OUT[i + m] = (RETURN_TYPE)(p1[i] - p2[i]);                    \
-        }                                                                \
-        return;                                                           \
+
+static inline void small_prod_pol_mat_toeplitz_i64(int degree, __int128 out[degree], const __int128 polynomial[degree], const uint64_t matrix_toeplitz[2*degree - 1]){
+    for (int i = 0; i < degree; i++) {
+        int64_t acc = 0;
+        for (int j = 0; j < degree; j++)
+            acc += (int64_t)polynomial[j] * (int64_t)matrix_toeplitz[degree - 1 - j + i];
+        out[i] = acc;
     }
+}
 
 
+static inline void small_prod_pol_mat_toeplitz_i128(int degree, __int128 out[degree], const __int128 polynomial[degree], const int64_t matrix_toeplitz[2*degree - 1]){
+    for (int i = 0; i < degree; i++) {
+        __int128 acc = 0;
+        for (int j = 0; j < degree; j++)
+            acc += (__int128)polynomial[j] * (__int128)matrix_toeplitz[degree - 1 - j + i];
+        out[i] = acc;
+    }
+}
+
+
+static inline void internal_prod_pol_mat_toeplitz_recursive_i64(int degree, __int128 out[degree], const __int128 vector[degree], const uint64_t toeplitz_matrix[2*degree - 1]){
+    if ((degree < TOEPLITZ_THRESHOLD) || ((degree % 3 != 0) && (!(degree & 1)))){
+        small_prod_pol_mat_toeplitz_i64(degree, out, vector, toeplitz_matrix);
+        return;                                                           
+    }                                                                     
+                                                                          
+    else if (degree % 3 == 0) {                                         
+        int m = degree / 3;                                             
+                                                                          
+        const __int128 *v0 = vector;                                 
+        const __int128 *v1 = vector + m;                              
+        const __int128 *v2 = vector + 2 * m;                          
+                                                                          
+        __int128 v_sub_02[m], v_sub_12[m], v_sub_01[m];                   
+        for (int i = 0; i < m; i++) {                                     
+            v_sub_02[i] = v0[i] - v2[i];                                  
+            v_sub_12[i] = v1[i] - v2[i];                                  
+            v_sub_01[i] = v0[i] - v1[i];                                  
+        }                                                                
+                                                                          
+        const uint64_t *M0 = toeplitz_matrix;                             
+        const uint64_t *M1 = toeplitz_matrix + m;                         
+        const uint64_t *M2 = toeplitz_matrix + 2 * m;                     
+        const uint64_t *M3 = toeplitz_matrix + 3 * m;                     
+        const uint64_t *M4 = toeplitz_matrix + 4 * m;                     
+                                                                          
+        uint64_t M_sum_012[2 * m - 1];                                    
+        uint64_t M_sum_123[2 * m - 1];                                    
+        uint64_t M_sum_234[2 * m - 1];                                    
+                                                                          
+        for (int i = 0; i < 2 * m - 1; i++) {                             
+            M_sum_012[i] = M0[i] + M1[i] + M2[i];                         
+            M_sum_123[i] = M1[i] + M2[i] + M3[i];                         
+            M_sum_234[i] = M2[i] + M3[i] + M4[i];                         
+        }                                                                
+                                                                          
+        __int128 p0[m], p1[m], p2[m], p3[m], p4[m], p5[m];               
+                                                                          
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p0, v2, M_sum_012);                             
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p1, v1, M_sum_123);                             
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p2, v0, M_sum_234);                             
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p3, v_sub_02, M2);                              
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p4, v_sub_12, M1);                              
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p5, v_sub_01, M3);                              
+                                                                          
+        for (int i = 0; i < m; i++) {                                    
+            out[i] = (int64_t)(p0[i] + p3[i] + p4[i]);        
+            out[i + m] = (int64_t)(p1[i] + p5[i] - p4[i]);        
+            out[i + 2 * m] = (int64_t)(p2[i] - p3[i] - p5[i]);        
+        }                                                                
+        return;                                                          
+    }                                                                     
+                                                                          
+    else if (!(degree & 1)) {                                                                
+        int m = (degree) / 2;                                             
+                                                                          
+        const __int128 *v0 = vector;                                 
+        const __int128 *v1 = vector + m;                              
+                                                                          
+        __int128 v_sub_01[m];                                             
+        for (int i = 0; i < m; i++)                                       
+            v_sub_01[i] = v0[i] - v1[i];                                  
+                                                                          
+        const uint64_t *M0 = toeplitz_matrix;                             
+        const uint64_t *M1 = toeplitz_matrix + m;                         
+        const uint64_t *M2 = toeplitz_matrix + 2 * m;                     
+                                                                          
+        uint64_t M_sum_M01[2 * m - 1];                                    
+        uint64_t M_sum_M12[2 * m - 1];                                    
+                                                                          
+        for (int i = 0; i < 2 * m - 1; i++) {                             
+            M_sum_M01[i] = M0[i] + M1[i];                                 
+            M_sum_M12[i] = M1[i] + M2[i];                                 
+        }                                                                
+                                                                        
+        __int128 p0[m], p1[m], p2[m];                                     
+                                                                        
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p0, v1, M_sum_M01);                             
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p1, v0, M_sum_M12);                             
+        internal_prod_pol_mat_toeplitz_recursive_i64(m, p2, v_sub_01, M1);                              
+                                                                        
+        for (int i = 0; i < m; i++) {                                     
+            out[i] = (int64_t)(p0[i] + p2[i]);                    
+            out[i + m] = (int64_t)(p1[i] - p2[i]);                    
+        }                                                                
+        return;                                                           
+    }
+}
+
+static inline void internal_prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], const __int128 vector[degree], const int64_t toeplitz_matrix[2*degree - 1]){
+    if ((degree < TOEPLITZ_THRESHOLD) || ((degree % 3 != 0) && (!(degree & 1)))){
+        small_prod_pol_mat_toeplitz_i128(degree, out, vector, toeplitz_matrix);
+        return;                                                           
+    }                                                                     
+                                                                          
+    else if (degree % 3 == 0) {                                         
+        int m = degree / 3;                                             
+                                                                          
+        const __int128 *v0 = vector;                                 
+        const __int128 *v1 = vector + m;                              
+        const __int128 *v2 = vector + 2 * m;                          
+                                                                          
+        __int128 v_sub_02[m], v_sub_12[m], v_sub_01[m];                   
+        for (int i = 0; i < m; i++) {                                     
+            v_sub_02[i] = v0[i] - v2[i];                                  
+            v_sub_12[i] = v1[i] - v2[i];                                  
+            v_sub_01[i] = v0[i] - v1[i];                                  
+        }                                                                
+                                                                          
+        const int64_t *M0 = toeplitz_matrix;                             
+        const int64_t *M1 = toeplitz_matrix + m;                         
+        const int64_t *M2 = toeplitz_matrix + 2 * m;                     
+        const int64_t *M3 = toeplitz_matrix + 3 * m;                     
+        const int64_t *M4 = toeplitz_matrix + 4 * m;                     
+                                                                          
+        int64_t M_sum_012[2 * m - 1];                                    
+        int64_t M_sum_123[2 * m - 1];                                    
+        int64_t M_sum_234[2 * m - 1];                                    
+                                                                          
+        for (int i = 0; i < 2 * m - 1; i++) {                             
+            M_sum_012[i] = M0[i] + M1[i] + M2[i];                         
+            M_sum_123[i] = M1[i] + M2[i] + M3[i];                         
+            M_sum_234[i] = M2[i] + M3[i] + M4[i];                         
+        }                                                                
+                                                                          
+        __int128 p0[m], p1[m], p2[m], p3[m], p4[m], p5[m];               
+                                                                          
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p0, v2, M_sum_012);                             
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p1, v1, M_sum_123);                             
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p2, v0, M_sum_234);                             
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p3, v_sub_02, M2);                              
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p4, v_sub_12, M1);                              
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p5, v_sub_01, M3);                              
+                                                                          
+        for (int i = 0; i < m; i++) {                                    
+            out[i] = (__int128)(p0[i] + p3[i] + p4[i]);        
+            out[i + m] = (__int128)(p1[i] + p5[i] - p4[i]);        
+            out[i + 2 * m] = (__int128)(p2[i] - p3[i] - p5[i]);        
+        }                                                                
+        return;                                                          
+    }                                                                     
+                                                                          
+    else if (!(degree & 1)) {                                                                
+        int m = (degree) / 2;                                             
+                                                                          
+        const __int128 *v0 = vector;                                 
+        const __int128 *v1 = vector + m;                              
+                                                                          
+        __int128 v_sub_01[m];                                             
+        for (int i = 0; i < m; i++)                                       
+            v_sub_01[i] = v0[i] - v1[i];                                  
+                                                                          
+        const int64_t *M0 = toeplitz_matrix;                             
+        const int64_t *M1 = toeplitz_matrix + m;                         
+        const int64_t *M2 = toeplitz_matrix + 2 * m;                     
+                                                                          
+        int64_t M_sum_M01[2 * m - 1];                                    
+        int64_t M_sum_M12[2 * m - 1];                                    
+                                                                          
+        for (int i = 0; i < 2 * m - 1; i++) {                             
+            M_sum_M01[i] = M0[i] + M1[i];                                 
+            M_sum_M12[i] = M1[i] + M2[i];                                 
+        }                                                                
+                                                                        
+        __int128 p0[m], p1[m], p2[m];                                     
+                                                                        
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p0, v1, M_sum_M01);                             
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p1, v0, M_sum_M12);                             
+        internal_prod_pol_mat_toeplitz_recursive_i128(m, p2, v_sub_01, M1);                              
+                                                                        
+        for (int i = 0; i < m; i++) {                                     
+            out[i] = (int64_t)(p0[i] + p2[i]);                    
+            out[i + m] = (int64_t)(p1[i] - p2[i]);                    
+        }                                                                
+        return;                                                           
+    }
+}
 void prod_pol_mat_toeplitz_recursive_i64(int degree, __int128 out[degree], const __int128 vector[degree], const uint64_t toeplitz_matrix[2*degree - 1]){
-    // compute the product of an int128 polynomial with a uint64_t Toeplitz matrix mod 2^PHI_POW and store the result in an int128 polynomial using a recursive approach
-    PROD_POL_MAT_TOEPLITZ_RECURSIVE_CORE(prod_pol_mat_toeplitz_recursive_i64, prod_pol_mat_toeplitz_i64, int64_t, uint64_t, degree, out, vector, toeplitz_matrix);
+    // compute the product of an int128 polynomial with a uint64_t Toeplitz matrix and store the result in an int128 polynomial using a recursive approach
+    internal_prod_pol_mat_toeplitz_recursive_i64(degree, out, vector, toeplitz_matrix);
 }
 
 
 void prod_pol_mat_toeplitz_recursive_i128(int degree, __int128 out[degree], const __int128 vector[degree], const int64_t toeplitz_matrix[2*degree - 1]){
     // compute the product of an int128 polynomial with an int64_t Toeplitz matrix and store the result in an int128 polynomial using a recursive approach
-    PROD_POL_MAT_TOEPLITZ_RECURSIVE_CORE(prod_pol_mat_toeplitz_recursive_i128, prod_pol_mat_toeplitz_i128, __int128, int64_t, degree, out, vector, toeplitz_matrix);
+    internal_prod_pol_mat_toeplitz_recursive_i128(degree, out, vector, toeplitz_matrix);
 }
 # endif
 

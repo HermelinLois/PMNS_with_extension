@@ -30,8 +30,6 @@ void addmul_pol64_int64_mpn(int degree, int n_limbs, mp_limb_t out[degree][n_lim
 =================================================================*/
 void addmul_polmpn_pol64(int degree, int n_limbs, mp_limb_t out[degree][n_limbs], mp_limb_t pol_mpn[degree][n_limbs], const int64_t pol64[degree]);
 
-void recursive_karatsuba_product(int degree, __int128 out[2 * degree - 1], int64_t pol_A[degree], int64_t pol_B[degree]);
-
 void polynomials_product(int degree, __int128 out[degree], int64_t PolA[degree], int64_t PolB[degree]);
 
 #if IS_ELEMENTS_IN_GAMMA_BASIS
