@@ -24,24 +24,24 @@ void test_equality(){
     for (int idx=0; idx<N_TESTS; idx++){
         // Test Exact conversion
         reset_polynomial(DEGREE, polynomial);
-        convert_element_to_pmns_exact(EXTENSION_DEGREE, DEGREE, polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
+        convert_element_to_pmns_exact(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
         check_equality(DEGREE, CONVERTED_ELEMENTS_EXACT[idx], polynomial, "exact");
 
         // Test Pseudo-Fast conversion
         reset_polynomial(DEGREE, polynomial);
-        convert_element_to_pmns_pseudo_fast(EXTENSION_DEGREE, DEGREE, polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
+        convert_element_to_pmns_pseudo_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
         check_equality(DEGREE, CONVERTED_ELEMENTS_PSEUDO_FAST[idx], polynomial, "pseudo-fast");
         
         // Test Fast conversion
         reset_polynomial(DEGREE, polynomial);
-        convert_element_to_pmns_fast(EXTENSION_DEGREE, DEGREE, polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
+        convert_element_to_pmns_fast(polynomial, EXTENSION_FIELD_ELEMENTS[idx]);
         check_equality(DEGREE, CONVERTED_ELEMENTS_FAST[idx], polynomial, "fast");
     }
     printf("Conversions seems to work with given parameters\n");
 }
 
 
-void do_bench(void (*to_pmns)(int extension_degree, int degree, int64_t pmns[degree], const mp_limb_t element_data[extension_degree][N_LIMBS]), mp_limb_t tests_pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], char* method_name, gmp_randstate_t state){
+void do_bench(void (*to_pmns)(int64_t pmns[DEGREE], const mp_limb_t element_data[EXTENSION_DEGREE][N_LIMBS]), mp_limb_t tests_pool[N_BENCH_SAMPLES][EXTENSION_DEGREE][N_LIMBS], char* method_name, gmp_randstate_t state){
 	/*Evaluate the number of cycles needed to perform the conversion */
     
     uint64_t *cycles = (uint64_t *)calloc(N_BENCH_TESTS,sizeof(uint64_t)), *statTimer;
@@ -54,7 +54,7 @@ void do_bench(void (*to_pmns)(int extension_degree, int degree, int64_t pmns[deg
     // heat up the cache
 	for(int i=0;i<N_BENCH_TESTS;i++){
 		rand_field_element(a, state);
-		to_pmns(EXTENSION_DEGREE, DEGREE, polynomial, a);
+		to_pmns(polynomial, a);
 	}
 	
     // measure the conversion time
@@ -70,7 +70,7 @@ void do_bench(void (*to_pmns)(int extension_degree, int degree, int64_t pmns[deg
             reset_polynomial(DEGREE, polynomial);
 
 			t1 = cpucyclesStart();
-			to_pmns(EXTENSION_DEGREE, DEGREE, polynomial, element_data);
+			to_pmns(polynomial, element_data);
 			t2 = cpucyclesStop();
 
 			diff_t = cycles_diff(t1, t2);

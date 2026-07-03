@@ -19,7 +19,7 @@
 extern "C" {
 void rand_field_element(mp_limb_t (*a)[N_LIMBS], gmp_randstate_t state);
 
-void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t *out, const mp_limb_t (*element_data)[N_LIMBS]);
+void convert_element_to_pmns_fast(int64_t *out, const mp_limb_t (*element_data)[N_LIMBS]);
 
 void polynomials_product(__int128 *out, const int64_t *PolA, const int64_t *PolB);
 
@@ -49,7 +49,7 @@ static fmpz_mod_ctx_t ctx;
 // ============================ FORMAT =================================
 static inline void pmns_format(int64_t poly_res[DEGREE],  mp_limb_t a[EXTENSION_DEGREE][N_LIMBS]){
     // Convert the field element a to its PMNS representation and store it in poly_res
-    convert_element_to_pmns_fast(EXTENSION_DEGREE, DEGREE, poly_res, a);
+    convert_element_to_pmns_fast(poly_res, a);
 }
 
 static inline void flint_format(fq_t out, mp_limb_t a[EXTENSION_DEGREE][N_LIMBS]){
