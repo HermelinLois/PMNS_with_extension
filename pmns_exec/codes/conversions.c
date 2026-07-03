@@ -98,7 +98,7 @@ void convert_element_to_pmns_exact(int extension_degree, int degree, int64_t out
     # endif
 
     for (int i=0; i<N_INT_RED_CLASSICAL; i++)
-        reduction_montgomery_mpz(degree, vector, vector, L, L_INV);
+        reduction_montgomery_mpz(vector, vector, L, L_INV);
 
     for (int deg=0; deg<degree; deg++)
         out[deg] = mpz_get_si(vector[deg]);
@@ -119,7 +119,7 @@ void convert_element_to_pmns_fast(int extension_degree, int degree, int64_t out[
             addmul_pol64_int64(polynomial, PMNS_THETA_FAST[deg][i], part);
         }
     }
-    reduction_montgomery_lattice(degree, out, polynomial, L, L_INV);
+    reduction_montgomery_lattice(out, polynomial, L, L_INV);
 }
 
 
@@ -151,7 +151,7 @@ void convert_element_to_pmns_pseudo_fast(int extension_degree, int degree, int64
     }
 
     for (int it = 0; it < N_INT_RED_PSEUDO_FAST; it++)
-        reduction_montgomery_mpn(POL_LIMBS, degree, vector, vector, L, L_INV);
+        reduction_montgomery_mpn(POL_LIMBS, vector, vector, L, L_INV);
 
     for (int i=0; i<degree; i++)
         out[i] = (int64_t)vector[i][0];

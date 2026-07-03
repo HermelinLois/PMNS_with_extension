@@ -24,24 +24,24 @@ void test_equality(){
         polynomials_product(polynomial, POL_A[idx], POL_B[idx]);
 
         // compute different reductions and compare the result to the expected values
-        reduction_montgomery_lattice(DEGREE, out, polynomial, L, L_INV);
+        reduction_montgomery_lattice(out, polynomial, L, L_INV);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery");
 
         # if IS_DOUBLE_SPARSE
-        reduction_montgomery_linear(EXTENSION_DEGREE, DEGREE, out, polynomial);
+        reduction_montgomery_linear(out, polynomial);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED[idx], "Montgomery linear");
         #endif
 
         # if IS_BABAI_USABLE
-        reduction_babai(DEGREE, out, polynomial, L, L_INV_BABAI);
+        reduction_babai(out, polynomial, L, L_INV_BABAI);
         check_equality(DEGREE, out, BABAI_PROD_RED[idx], "Babai");
         #endif
 
         # if IS_TOEPLITZ_USABLE
-        reduction_montgomery_toeplitz(DEGREE, out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
+        reduction_montgomery_toeplitz(out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz");
 
-        reduction_montgomery_toeplitz_recursive(DEGREE, out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
+        reduction_montgomery_toeplitz_recursive(out, polynomial, TOEPLITZ_MAT_M, TOEPLITZ_MAT_N);
         check_equality(DEGREE, out, MONTGOMERY_PROD_RED_TOEPLITZ[idx], "Montgomery Toeplitz recursive");
         #endif
     }
