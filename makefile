@@ -44,7 +44,7 @@ LDFLAGS = -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR) -lgmp -lflint -lntl -lm
 NTESTS ?= 10
 NBITS ?= 128
 K ?= 2
-OPT ?= -O3 -funroll-loops
+OPT ?= -O3 -funroll-loops -march=native
 ETYPE ?= 0
 STRUCT ?= generic
 NOPT ?= NOT_SET
