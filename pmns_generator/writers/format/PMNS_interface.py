@@ -65,13 +65,11 @@ class PMNSContainer:
 
 
     def _search_in_spaces(self, name: str) -> Any:
-        """Search for a parameter in the various data spaces."""
-        legacy_mapping = {'type': 'etype', 'struct': 'structure'}
-        lookup_name = legacy_mapping.get(name, name)
+        """Search for a parameter in the PMNS data"""
 
         for space in [self.data.matrices, self.data.reductions, self.data.conversions, self.data.pmns_params, self.data.__dict__]:
-            if lookup_name in space:
-                return space[lookup_name]
+            if name in space:
+                return space[name]
             
         raise KeyError(f"Unknown parameter '{name}'.")
     
