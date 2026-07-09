@@ -61,7 +61,7 @@ void prod_pol_mat_i64(__int128 out[DEGREE], __int128 polynomial[DEGREE], const i
 
 void prod_pol_mat_i128(__int128 out[DEGREE], __int128 polynomial[DEGREE], const int64_t matrix[DEGREE][DEGREE]);
 
-# if TOEPLITZ_IS_USABLE
+# if LATTICE_IS_DOUBLE_SPARSE
 void prod_pol_mat_toeplitz_i64(__int128 out[DEGREE], const __int128 polynomial[DEGREE], const uint64_t matrix_toeplitz[2*DEGREE - 1]);
 
 void prod_pol_mat_toeplitz_i128(__int128 out[DEGREE], const __int128 polynomial[DEGREE], const int64_t matrix_toeplitz[2*DEGREE - 1]);
