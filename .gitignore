@@ -24,14 +24,9 @@ Thumbs.db
 # Jupyter
 .ipynb_checkpoints/
 
-# Pytest
-.pytest_cache
-
+# python generation
 pmns_exec/saves/
 pmns_exec/params/
 pmns_exec/tests/*.h
 pmns_exec/config_pmns
-
 /test_*
-
-/pmns_factory/pmns_E_type0_vector.py

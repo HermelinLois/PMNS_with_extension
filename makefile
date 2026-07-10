@@ -166,7 +166,7 @@ $(SRC_red) $(SRC_conv): generate
 
 
 clean:
-	@rm -rf $(GENERATED_FILES) $(TMP_DIR)
+	@rm -rf $(GENERATED_FILES)
 	@rm -f $(TARGET_TEST_red) $(TARGET_TEST_conv) $(TARGET_TEST_libs)
 
 .PHONY: generate help show-config recompile clean new-tests check-state

@@ -21,6 +21,18 @@ Although the Babai rounding method is available, the current focus is mainly on 
 - GCC (or compatible C compiler)
 - C and C++ libraries and headers: GMP, FLINT, NTL
 
+### Environment setup
+
+An `env.sh` script manages the project's environment. It requires `conda` to be installed.
+Once the environment has been initialized, run `conda activate <env_name>` (`pmns` by default).
+
+| Command | Description |
+|---------|-------------|
+| `./env.sh init` | Create the environment with the required C and Python dependencies |
+| `./env.sh update` | Update the C and Python libraries |
+| `./env.sh clear` | Delete the environment |
+| `./env.sh` | Display available commands |
+
 ## Project architecture
 
 ### Workflow overview

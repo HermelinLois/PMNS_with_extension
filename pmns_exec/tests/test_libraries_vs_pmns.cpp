@@ -8,6 +8,10 @@
 #include "../codes/interfaces/measurement_utils_interface.h"
 #include "../params/reductions_params.h"
 
+#include <flint/fmpz.h>
+#include <flint/fmpz_poly.h>
+#include <flint/fmpz_mod.h>
+#include <flint/fmpz_mod_poly.h>
 #include <flint/fq.h>
 
 #include <NTL/ZZ.h>
