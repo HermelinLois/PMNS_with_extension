@@ -16,14 +16,18 @@ Although the Babai rounding method is available, the current focus is mainly on 
 
 ## Prerequisites
 
+- Linux (x86_64 or aarch64)
 - SageMath (used in `pmns_factory` to construct PMNS)
 - Python 3 and `jinja2`
 - GCC (or compatible C compiler)
 - C and C++ libraries and headers: GMP, FLINT, NTL
 
+All of the above are provided automatically by `env.sh init` (see below) — conda, SageMath, GMP, FLINT, NTL, and Python dependencies are installed inside a dedicated conda environment, and the system C build tools (GCC, G++, Make, pkg-config) are installed via `apt` if missing. No manual pre-installation is required.
+
 ### Environment setup
 
-An `env.sh` script manages the project's environment. It requires `conda` to be installed.
+An `env.sh` script manages the project's environment. If `conda` is not already installed, `env.sh` downloads and installs Miniconda automatically (non-interactively) before proceeding — no prior conda installation is needed.
+
 Once the environment has been initialized, run `conda activate <env_name>` (`pmns` by default).
 
 | Command | Description |
@@ -32,6 +36,8 @@ Once the environment has been initialized, run `conda activate <env_name>` (`pmn
 | `./env.sh update` | Update the C and Python libraries |
 | `./env.sh clear` | Delete the environment |
 | `./env.sh` | Display available commands |
+
+> **Note:** `./env.sh init` also installs missing system build tools (`gcc`, `g++`, `make`, `pkg-config`) via `apt`, and may prompt for `sudo` privileges the first time it runs.
 
 ## Project architecture
 
@@ -201,4 +207,5 @@ Note: Babai rounding is implemented but currently not used with sparse construct
 - **Note:** For very large primes, the automatically found `n_opt` might not be high enough, leading to an unsuccessful PMNS construction for that specific $n$. In such cases, we recommend finding a valid construction for the target prime and manually setting the parameters using the `NOPT` **Makefile** parameter.
 - **Note:** As a test workflow for conversions and reductions, Python is used to generate input data and expected results. In C, we process this input data and compare the computed output with the Python reference. Depending on the chosen PMNS parameters, test generation can be time-consuming when the number of tests is large. If these tests are not needed, we recommend reducing `NTESTS` or setting it to `0`.
 - **Note:** If compilation fails with `gmp.h: No such file or directory`, ensure your environment (e.g., conda) is activated or pass `INCLUDE_DIR`/`LIBRARIES_DIR` to `make`.
+- **Note:** `env.sh init` requires `apt` to install system build tools automatically. On systems without `apt`, install `gcc`, `g++`, `make`, and `pkg-config` manually before running `env.sh init`.
 - **Caution:** High repetition of `montgomery_reduction_mpn` can cause incorrect results. If the number of internal reductions required for Pseudo-Fast conversion is greater than 2, we recommend switching the reduction method to the `mpz` version.
